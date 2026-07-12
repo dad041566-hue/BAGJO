@@ -349,3 +349,60 @@ export interface Partner {
   isContracted: boolean;
   isDelivered: boolean;
 }
+
+/* ── 대시보드 통계 ────────────────────────────── */
+export interface RecentOrderSummary {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface RecentInsuranceSummary {
+  id: string;
+  petName: string;
+  ownerName: string;
+  insuranceName?: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface RecentApplicationSummary {
+  id: string;
+  role: 'user' | 'admin' | 'b2b' | 'insurance' | 'partner';
+  companyName?: string;
+  name: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface AdminDashboardSummary {
+  revenue: {
+    totalPaidAmount: number;
+  };
+  orders: {
+    newCount: number;
+    pendingCount: number;
+  };
+  insuranceAnalyses: {
+    pendingCount: number;
+    reviewingCount: number;
+  };
+  products: {
+    totalCount: number;
+    activeCount: number;
+    preparingCount: number;
+  };
+  applications: {
+    totalUsers: number;
+    todayNewUsers: number;
+    partnerPendingCount: number;
+    insurancePendingCount: number;
+    b2bPendingCount: number;
+  };
+  recentOrders: RecentOrderSummary[];
+  recentInsurances: RecentInsuranceSummary[];
+  recentApplications: RecentApplicationSummary[];
+}

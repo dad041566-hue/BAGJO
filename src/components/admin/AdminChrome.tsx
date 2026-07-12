@@ -56,7 +56,13 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
   );
 }
 
-export default function AdminChrome({ children }: { children: React.ReactNode }) {
+export default function AdminChrome({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user?: { name?: string | null; role?: string };
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -223,8 +229,10 @@ export default function AdminChrome({ children }: { children: React.ReactNode })
           </div>
           <div className="ml-auto flex items-center gap-4">
             <div className="text-right">
-              <p className="text-xs font-semibold text-[#303731]">관리자</p>
-              <p className="text-[10px] text-[#8B928C]">Mock Console</p>
+              <p className="text-xs font-semibold text-[#303731]">{user?.name || '관리자'}</p>
+              <p className="text-[10px] text-[#8B928C]">
+                {user?.role === 'SUPER_ADMIN' ? '최고관리자' : user?.role === 'admin' ? '운영자' : '관리자'}
+              </p>
             </div>
             <button type="button" onClick={handleLogout} aria-label="로그아웃" className="flex size-10 items-center justify-center border border-[#D1D0C8] bg-white text-[#59615B]">
               <LogOut className="size-4" />

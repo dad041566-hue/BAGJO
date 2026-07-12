@@ -1,4 +1,4 @@
-import { Brand, InsuranceApplication, Order, Product, User } from '@/types';
+import { Brand, InsuranceApplication, Order, Product, User, AdminDashboardSummary } from '@/types';
 import { users as mockUsers } from '@/data/users';
 import { defaultSurveyConfig, type SurveyConfig } from '@/lib/survey/config';
 import { defaultKitsConfig, type KitsConfig } from '@/lib/kits/config';
@@ -877,4 +877,28 @@ export function isLoggedIn(): boolean {
 
 export function isAdmin(): boolean {
   return getCurrentUser()?.role === 'admin';
+}
+
+export type AdminDashboardResult =
+  | {
+      ok: true;
+      data: AdminDashboardSummary;
+    }
+  | {
+      ok: false;
+      status: number;
+      message: string;
+    };
+
+export async function getAdminDashboardSummary(): Promise<AdminDashboardResult> {
+  try {
+    const response = await fetch('/api/admin/dashboard');
+    if (!response.ok) {
+      return { ok: false, status: response.status, message: 'network-error' };
+    }
+    const data = (await response.json()) as AdminDashboardSummary;
+    return { ok: true, data };
+  } catch {
+    return { ok: false, status: 500, message: 'network-error' };
+  }
 }

@@ -272,7 +272,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 <p className="page-eyebrow">함께 둘러보기</p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#17211D]">이런 상품도 함께 살펴보세요.</h2>
               </div>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:gap-6">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 xl:grid-cols-4 xl:gap-6">
                 {relatedProducts.map((item) => (
                   <ProductCard key={item.id} product={item} />
                 ))}
