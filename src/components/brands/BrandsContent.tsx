@@ -8,7 +8,7 @@ import BrandCard from '@/components/common/BrandCard';
 import { useCategorySettings } from '@/components/providers/CategorySettingsProvider';
 import { ArrowRight, Leaf, ShieldCheck, Box, ThumbsUp, Recycle } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -54,10 +54,8 @@ function BrandsInner({ brands, initialSpotlightBrand }: Props) {
   const displayedBrands = filteredBrands.slice(0, visibleCount);
   const hasMore = visibleCount < filteredBrands.length;
   
-  const spotlightBrandsList = useMemo(() => {
-    const recommended = visibleBrands.filter((brand) => brand.isRecommended);
-    return recommended.length > 0 ? recommended : visibleBrands.slice(0, 5);
-  }, [visibleBrands]);
+  const recommendedSpotlightBrands = visibleBrands.filter((brand) => brand.isRecommended);
+  const spotlightBrandsList = recommendedSpotlightBrands.length > 0 ? recommendedSpotlightBrands : visibleBrands.slice(0, 5);
 
   const [spotlightIndex, setSpotlightIndex] = useState(() => {
     if (initialSpotlightBrand && spotlightBrandsList.length > 0) {

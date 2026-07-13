@@ -263,6 +263,9 @@ export interface QnA {
   isVisible?: boolean;
 }
 
+export interface QnaConfig {
+  items: QnA[];
+}
 /* ── 라이프스타일 카테고리 ─────────────────── */
 export interface LifestyleCategory {
   slug: string;

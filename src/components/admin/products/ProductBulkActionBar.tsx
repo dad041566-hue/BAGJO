@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Eye, EyeOff, PackageOpen, LayoutGrid, X } from 'lucide-react';
+import { Trash2, Eye, EyeOff, PackageOpen, X } from 'lucide-react';
 import { CATALOG_STATUS_META } from '@/lib/products/constants';
 
 interface ProductBulkActionBarProps {
@@ -50,7 +50,7 @@ export function ProductBulkActionBar({
               <button
                 key={key}
                 disabled={isProcessing}
-                onClick={() => handleAction(() => onBulkUpdateStatus(key as any))}
+                onClick={() => handleAction(() => onBulkUpdateStatus(key as 'draft' | 'ready' | 'sold_out'))}
                 className="w-full text-left px-4 py-2 text-sm hover:bg-stone-50 disabled:opacity-50"
               >
                 {meta.label}
@@ -99,4 +99,3 @@ export function ProductBulkActionBar({
     </div>
   );
 }
-

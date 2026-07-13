@@ -38,22 +38,22 @@ export default function BrandShowcaseSlider({ brands, productsByBrand }: Props) 
 
   const displayList = useMemo(() => {
     if (shuffledBrands.length === 0) return [];
-    // 3배수로 복제하여 무한 스크롤(루프) 효과를 줌
-    return [...shuffledBrands, ...shuffledBrands, ...shuffledBrands];
+    return shuffledBrands; // 무한 스크롤 제거, 원본 배열만 반환
   }, [shuffledBrands]);
 
-  // 클라이언트 마운트 시 브랜드를 랜덤으로 섞음 (Hydration 에러 방지)
+  // 클라이언트 마운트 시 최초 8개 브랜드를 순서대로 표시 (Hydration 에러 방지)
   useEffect(() => {
     if (!hasShuffled && brands.length > 0) {
-      const shuffled = [...brands].sort(() => Math.random() - 0.5);
+      // 8개만 고정하여 차례대로 표시 (랜덤 셔플 제거)
+      const selected = brands.slice(0, 8);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setShuffledBrands(shuffled);
-      setActiveIndex(shuffled.length); // 가운데 세트부터 시작
+      setShuffledBrands(selected);
+      setActiveIndex(0); // 첫 번째 아이템부터 시작
       setHasShuffled(true);
       
       // 초기 스크롤 위치 맞추기
       setTimeout(() => {
-        const initialTab = document.getElementById(`brand-tab-${shuffled.length}`);
+        const initialTab = document.getElementById(`brand-tab-0`);
         if (initialTab && brandRailRef.current) {
           initialTab.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'start' });
         }
@@ -61,62 +61,7 @@ export default function BrandShowcaseSlider({ brands, productsByBrand }: Props) 
     }
   }, [brands, hasShuffled]);
 
-  // 무한 루프 경계 처리 (양 끝에 도달하면 가운데 세트로 위치 순간이동)
-  const handleScrollAndBoundary = useCallback((index: number) => {
-    const N = shuffledBrands.length;
-    if (N === 0) return index;
 
-    let targetIndex = index;
-    let shouldJump = false;
-
-    // 만약 3번째 세트(2*N) 이상으로 가거나, 1번째 세트(N 미만)로 너무 치우치면
-    if (index >= N * 2) {
-      targetIndex = index - N;
-      shouldJump = true;
-    } else if (index < N && index === 0) {
-      targetIndex = index + N;
-      shouldJump = true;
-    }
-
-    if (shouldJump && brandRailRef.current) {
-      const rail = brandRailRef.current;
-      const targetTab = document.getElementById(`brand-tab-${targetIndex}`);
-      const currentTab = document.getElementById(`brand-tab-${index}`);
-      
-      if (targetTab && currentTab) {
-        const diff = targetTab.offsetLeft - currentTab.offsetLeft;
-        rail.scrollBy({ left: diff, behavior: 'auto' }); // 부드럽지 않게 즉시 이동
-      }
-    }
-    
-    return targetIndex;
-  }, [shuffledBrands.length]);
-
-  // 자동 슬라이드 (오토 플레이)
-  useEffect(() => {
-    if (!hasShuffled || shuffledBrands.length <= 1 || isHovered) return;
-
-    const timer = setInterval(() => {
-      setActiveIndex((prev) => {
-        const nextIndex = prev + 1;
-        const nextTab = document.getElementById(`brand-tab-${nextIndex}`);
-        if (nextTab && brandRailRef.current) {
-          const rail = brandRailRef.current;
-          const tabRect = nextTab.getBoundingClientRect();
-          const railRect = rail.getBoundingClientRect();
-          
-          if (tabRect.left < railRect.left || tabRect.right > railRect.right) {
-            nextTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-          }
-        }
-        
-        // 경계 검사 후 보정된 인덱스 반환
-        return handleScrollAndBoundary(nextIndex);
-      });
-    }, 2500);
-
-    return () => clearInterval(timer);
-  }, [hasShuffled, shuffledBrands, isHovered, handleScrollAndBoundary]);
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(displayList.length > 1);

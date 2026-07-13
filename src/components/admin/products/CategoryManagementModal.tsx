@@ -19,6 +19,8 @@ export function CategoryManagementModal({ isOpen, onClose }: CategoryManagementM
 
   useEffect(() => {
     if (isOpen) {
+      // 모달이 열리거나 탭이 바뀔 때 서버 설정을 편집용 드래프트로 명시적으로 복사한다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCategories(activeTab === 'product' ? categorySettings.productCategories : categorySettings.lifestyleCategories);
       setErrorMsg(null);
       setEditingIndex(null);

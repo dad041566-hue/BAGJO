@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import AdminChrome from '@/components/admin/AdminChrome';
+import AdminShell from '@/components/admin-new/layout/AdminShell';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -14,8 +14,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <AdminChrome user={{ name: session.user.name, role: session.user.role }}>
+    <AdminShell user={{ name: session.user.name, role: session.user.role }}>
       {children}
-    </AdminChrome>
+    </AdminShell>
   );
 }

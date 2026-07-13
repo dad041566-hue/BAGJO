@@ -1,6 +1,6 @@
-import React from 'react';
 import Image from 'next/image';
-import { Edit2, ExternalLink } from 'lucide-react';
+import { Edit2, ExternalLink, FileText, ImageOff } from 'lucide-react';
+import { AdminStatusBadge } from '@/components/admin/AdminUi';
 import type { Product, Brand } from '@/types';
 import { formatPrice } from '@/lib/format';
 import { CATALOG_STATUS_META, VISIBILITY_META, getPriceState } from '@/lib/products/constants';
@@ -11,6 +11,7 @@ interface ProductMobileCardProps {
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
   onEdit: (product: Product) => void;
+  onEditDetails: (product: Product) => void;
 }
 
 export function ProductMobileCard({
@@ -19,126 +20,44 @@ export function ProductMobileCard({
   isSelected,
   onToggleSelect,
   onEdit,
+  onEditDetails,
 }: ProductMobileCardProps) {
   const priceState = getPriceState(product.price);
+  const catalogMeta = CATALOG_STATUS_META[product.catalogStatus as keyof typeof CATALOG_STATUS_META] || CATALOG_STATUS_META.draft;
+  const visibilityMeta = VISIBILITY_META[String(product.isVisible !== false) as keyof typeof VISIBILITY_META];
 
   return (
-    <div
-      className={`relative p-4 bg-white border rounded-xl shadow-sm transition-colors ${
-        isSelected ? 'border-stone-400 bg-stone-50/50' : 'border-stone-200/50'
-      }`}
-    >
-      <div className="absolute top-4 left-4 z-10 bg-white rounded">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggleSelect(product.id)}
-          className="w-5 h-5 rounded border-stone-300 text-stone-900 focus:ring-stone-900"
-        />
-      </div>
-
-      <div className="flex gap-4 ml-8">
-        <div className="relative w-20 h-20 rounded-lg border border-stone-100 overflow-hidden bg-stone-50 shrink-0">
-          {product.image ? (
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover"
-              sizes="80px"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-stone-300 text-xs">
-              No Img
-            </div>
-          )}
+    <article className={`border bg-white p-4 transition-colors ${isSelected ? 'border-[#A8742E] bg-[#F7F2E9]' : 'border-[#E7E0D5]'}`}>
+      <div className="flex items-start gap-3">
+        <input type="checkbox" checked={isSelected} onChange={() => onToggleSelect(product.id)} aria-label={`${product.name} 선택`} className="mt-1 size-4 shrink-0 border-[#D8C4A3] text-[#17211D] focus:ring-[#A8742E]" />
+        <div className="relative size-20 shrink-0 overflow-hidden border border-[#E7E0D5] bg-[#FAF8F3]">
+          {product.image ? <Image src={product.image} alt="" fill className="object-cover" sizes="80px" /> : <div className="flex size-full items-center justify-center text-[#AEB3AE]"><ImageOff className="size-5" /></div>}
         </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <span className="text-xs font-medium text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded">
-              {brand?.name || '알 수 없음'}
-            </span>
-            <div className="flex gap-1">
-              <a
-                href={`/shop/${product.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className="p-1 text-stone-400 hover:text-stone-900 bg-stone-50 rounded"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-              <button
-                onClick={() => onEdit(product)}
-                className="p-1 text-stone-400 hover:text-stone-900 bg-stone-50 rounded"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          <h3 className="text-sm font-medium text-stone-900 line-clamp-2 leading-snug mb-2">
-            {product.name}
-          </h3>
-
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {/* Catalog Status */}
-            {(() => {
-              const meta = CATALOG_STATUS_META[product.catalogStatus as keyof typeof CATALOG_STATUS_META] || CATALOG_STATUS_META.draft;
-              return (
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                    (meta.tone as string) === 'success'
-                      ? 'bg-green-100 text-green-700'
-                      : meta.tone === 'warning'
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-stone-100 text-stone-600'
-                  }`}
-                >
-                  {meta.label}
-                </span>
-              );
-            })()}
-            {/* Visibility Status */}
-            {(() => {
-              const meta = VISIBILITY_META[String(product.isVisible !== false) as keyof typeof VISIBILITY_META];
-              return (
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                    meta.tone === 'success'
-                      ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                      : 'bg-stone-50 text-stone-500 border border-stone-200'
-                  }`}
-                >
-                  {meta.label}
-                </span>
-              );
-            })()}
-          </div>
-
-          <div className="flex items-center justify-between mt-auto">
-            <div className="flex items-center">
-              {priceState === 'UNSET' && (
-                <span className="text-red-500 font-medium text-xs">가격 미등록</span>
-              )}
-              {priceState === 'ZERO' && (
-                <span className="text-amber-600 font-medium text-xs">0원 · 확인 필요</span>
-              )}
-              {priceState === 'VALID' && (
-                <span className="font-semibold text-stone-900 text-sm">
-                  {formatPrice(product.salePrice || product.price!)}원
-                </span>
-              )}
-            </div>
-            
-            {product.stock !== undefined && product.stock !== null && (
-              <span className="text-xs text-stone-500">
-                재고 {product.stock.toLocaleString()}
-              </span>
-            )}
-          </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-semibold tracking-wide text-[#A8742E]">{brand?.name || '브랜드 미지정'}</p>
+          <h2 className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-[#17211D]">{product.name}</h2>
+          <p className="mt-2 text-xs text-[#6F766F]">{product.category}{product.lifestyleCategory ? ` · ${product.lifestyleCategory}` : ''}</p>
         </div>
       </div>
-    </div>
+
+      <div className="mt-4 flex flex-wrap gap-1.5 border-t border-[#E7E0D5] pt-3">
+        <AdminStatusBadge tone={catalogMeta.tone === 'warning' ? 'warning' : 'neutral'}>{catalogMeta.label}</AdminStatusBadge>
+        <AdminStatusBadge tone={visibilityMeta.tone === 'success' ? 'success' : 'neutral'}>{visibilityMeta.label}</AdminStatusBadge>
+        {priceState === 'UNSET' && <AdminStatusBadge tone="danger">가격 미등록</AdminStatusBadge>}
+        {priceState === 'ZERO' && <AdminStatusBadge tone="warning">0원 · 확인</AdminStatusBadge>}
+      </div>
+
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <div>
+          <p className="font-editorial text-lg tabular-nums text-[#17211D]">{priceState === 'VALID' ? `${formatPrice(product.salePrice || product.price!)}원` : '가격 확인 필요'}</p>
+          {product.stock != null && <p className="mt-1 text-xs text-[#6F766F]">재고 {product.stock.toLocaleString()}개</p>}
+        </div>
+        <div className="flex items-center gap-1">
+          <a href={`/shop/${product.id}`} target="_blank" rel="noreferrer" aria-label={`${product.name} 스토어에서 보기`} className="flex size-10 items-center justify-center border border-[#E7E0D5] text-[#6F766F] hover:bg-[#F3EEE6]"><ExternalLink className="size-4" /></a>
+          <button type="button" onClick={() => onEditDetails(product)} aria-label={`${product.name} 상세 편집`} className="flex size-10 items-center justify-center border border-[#E7E0D5] text-[#A8742E] hover:bg-[#F3EEE6]"><FileText className="size-4" /></button>
+          <button type="button" onClick={() => onEdit(product)} aria-label={`${product.name} 기본 정보 수정`} className="flex size-10 items-center justify-center border border-[#E7E0D5] text-[#17211D] hover:bg-[#F3EEE6]"><Edit2 className="size-4" /></button>
+        </div>
+      </div>
+    </article>
   );
 }

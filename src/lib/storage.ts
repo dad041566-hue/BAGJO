@@ -902,3 +902,57 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardResult> 
     return { ok: false, status: 500, message: 'network-error' };
   }
 }
+export interface AdminImageUploadInput {
+  file: File;
+  domain: 'product' | 'brand' | 'banner';
+  usage: 'main' | 'gallery' | 'detail' | 'logo' | 'cover' | 'hero';
+  entityId?: string;
+  draftId?: string;
+}
+
+export interface AdminImageUploadResult {
+  path: string;
+  publicUrl: string;
+  bucket: string;
+}
+
+export async function uploadAdminImage(
+  input: AdminImageUploadInput
+): Promise<AdminImageUploadResult> {
+  const formData = new FormData();
+  formData.append('file', input.file);
+  formData.append('domain', input.domain);
+  formData.append('usage', input.usage);
+  if (input.entityId) formData.append('entityId', input.entityId);
+  if (input.draftId) formData.append('draftId', input.draftId);
+
+  const response = await fetch('/api/admin/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'upload-failed');
+  }
+
+  return data as AdminImageUploadResult;
+}
+
+export async function deleteTemporaryAdminImage(
+  path: string
+): Promise<{ deleted: boolean; reason: string }> {
+  const params = new URLSearchParams();
+  params.append('path', path);
+
+  const response = await fetch(`/api/admin/upload?${params.toString()}`, {
+    method: 'DELETE',
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'delete-failed');
+  }
+
+  return data as { deleted: boolean; reason: string };
+}
