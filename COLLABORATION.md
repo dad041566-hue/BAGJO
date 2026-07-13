@@ -25,7 +25,7 @@
 
 ## 3. 최초 셋업
 ```bash
-git clone https://github.com/mim1012/baekjo-obj.git
+git clone https://github.com/dad041566-hue/BAGJO.git
 cd baekjo-obj
 npm install
 npm run dev   # http://localhost:3000
@@ -49,7 +49,7 @@ npm run dev   # http://localhost:3000
   ```
 - **PR 머지 조건**: GitHub CI(`.github/workflows/ci.yml`)의 typecheck+build+lint 통과 + 리뷰어 승인(작성자≠리뷰어).
   백엔드 PR은 내가 `code-reviewer`·`security-reviewer` 에이전트로 리뷰 후 당신이 승인(2명뿐인 리뷰 보완).
-- **공식 저장소**: `https://github.com/mim1012/baekjo-obj` (소유·관리 = mim1012). 이전 저장소
+- **공식 저장소**: `https://github.com/dad041566-hue/BAGJO` (이전 저장소 이관 완료). 이전 저장소
   `dad041566-hue/BAGJO1`은 이관 완료 — 새 작업은 전부 새 저장소에서. dad041566은 collaborator로 초대받아 작업.
 - **브랜치 보호(하드 강제, 1회 설정)**: mim1012 계정으로 GitHub → `baekjo-obj` → Settings → Branches →
   `main`에 보호 규칙: ☑ Require a pull request before merging ☑ Require status checks to pass (CI 선택).

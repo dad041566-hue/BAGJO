@@ -224,7 +224,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   3. **작업 시작 선언.** 통합 브랜치에 영향 주는 작업은 시작 전에 SESSION.md(또는 팀 채널)에
      "누가 · 어떤 파일/영역 · 어느 브랜치" 한 줄을 남긴다. 같은 파일이 겹치면 먼저 선언한 쪽 우선, 뒤쪽은 rebase 책임.
   4. **push 전 `git pull --rebase origin integrate/<name>`** — integrate에서도 main과 동일하게 적용.
-- **공식 저장소**: `https://github.com/mim1012/baekjo-obj` (소유 = mim1012). 구 저장소는 이관 완료.
+- **공식 저장소**: `https://github.com/dad041566-hue/BAGJO`. 구 저장소는 이관 완료.
 - **하드 강제(✅ 2026-07-12 적용 완료)**: `main` 보호 규칙 활성 — PR 필수 + `verify` required status check(strict) +
   리뷰 승인 1명 + force-push/삭제 차단 + **enforce_admins ON**(admin 포함 직접 push 불가).
 
