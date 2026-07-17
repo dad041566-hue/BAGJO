@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 
-const fieldClass = 'w-full border border-[#C9C8C0] px-4 py-3.5 text-sm focus:border-[#2F3B34] bg-white';
-const textareaClass = 'w-full border border-[#C9C8C0] px-4 py-3.5 text-sm focus:border-[#2F3B34] bg-white resize-y min-h-24';
+const fieldClass = 'w-full border border-[#C9C8C0] px-4 h-12 text-[14px] outline-none transition-colors focus:border-[#2F3B34] focus:ring-1 focus:ring-[#2F3B34] bg-white rounded-sm';
+const textareaClass = 'w-full border border-[#C9C8C0] px-4 py-3 text-[14px] outline-none transition-colors focus:border-[#2F3B34] focus:ring-1 focus:ring-[#2F3B34] bg-white resize-y min-h-[100px] rounded-sm';
 
 /** 입점 심사 첨부서류 카테고리 — 관리자 화면에서도 동일한 이름으로 노출된다. */
 const ATTACHMENT_CATEGORIES = [

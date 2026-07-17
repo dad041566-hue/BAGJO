@@ -155,7 +155,7 @@ function SignupContent() {
     setBusinessResult('error');
   };
 
-  const fieldClass = 'w-full border border-[#C9C8C0] px-3 py-2 text-[13px] focus:border-[#2F3B34]';
+  const fieldClass = 'w-full border border-[#C9C8C0] px-4 h-12 text-[14px] outline-none transition-colors focus:border-[#2F3B34] focus:ring-1 focus:ring-[#2F3B34] bg-white';
 
   if (businessResult === 'success') {
     return (
@@ -192,9 +192,9 @@ function SignupContent() {
           </p>
 
           <div className="w-full rounded-[20px] border border-[#E2DACC] bg-[#FFFEFB] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] md:rounded-[24px] md:p-6 lg:p-8">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="flex flex-row overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 md:grid md:grid-cols-2 xl:grid-cols-4 pb-4 md:pb-0">
               {MEMBER_TYPES.map((type) => (
-                <article key={type.id} className="flex h-full min-h-[420px] flex-col rounded-[18px] border border-[#E2DACC] bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-[#AA8A55] xl:min-h-[450px]">
+                <article key={type.id} className="flex flex-col w-[80vw] sm:w-[320px] shrink-0 snap-center rounded-[18px] border border-[#E2DACC] bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-[#AA8A55] md:h-full md:min-h-[420px] xl:min-h-[450px]">
                   <div className="mb-4 flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[#F8F6F0]">
                     <type.icon className="h-7 w-7 text-[#173B2E]" strokeWidth={1.5} />
                   </div>

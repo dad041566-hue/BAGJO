@@ -105,7 +105,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="name@example.com"
-                className="w-full border border-[#C9C8C0] px-4 py-3 text-[13px] focus:border-[#2F3B34]"
+                className="w-full border border-[#C9C8C0] px-4 h-12 text-[14px] outline-none transition-colors focus:border-[#2F3B34] focus:ring-1 focus:ring-[#2F3B34] bg-white"
               />
             </label>
             <label className="block">
@@ -117,7 +117,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="비밀번호를 입력해 주세요"
-                className="w-full border border-[#C9C8C0] px-4 py-3 text-[13px] focus:border-[#2F3B34]"
+                className="w-full border border-[#C9C8C0] px-4 h-12 text-[14px] outline-none transition-colors focus:border-[#2F3B34] focus:ring-1 focus:ring-[#2F3B34] bg-white"
               />
             </label>
             <label className="flex cursor-pointer items-center gap-2 text-xs text-[#697069]">

@@ -48,7 +48,7 @@ export default function MypageWishlistPage() {
           {wishlist.map(product => (
             <div key={product.id} className="border border-[#E2DACD] rounded-sm p-3 flex flex-col">
               <div className="aspect-square bg-[#F2EEE6] rounded-lg mb-3"></div>
-              <Link href={`/shop/${product.id}`} className="font-medium text-sm text-[#17251F] hover:text-[#16382D] line-clamp-2">
+              <Link href={`/shop/${product.id}`} className="break-keep text-sm font-medium leading-[1.5] text-[#17251F] hover:text-[#16382D]">
                 {product.name}
               </Link>
               <div className="font-bold text-[#16382D] mt-2">
