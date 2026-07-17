@@ -14,11 +14,11 @@ export default function ConcernsPage() {
   const subConcerns = concerns.slice(8, 12);
   
   const infoCards = [
-    { title: '강아지가 자꾸 긁어요. 피부 가려움의 원인과 관리법', category: '#피부', href: '/concerns/skin' },
-    { title: '장 건강이 면역력의 시작! 유산균과 식이섬유의 중요성', category: '#영양', href: '/concerns/nutrition' },
-    { title: '산책, 얼마나 해야 적당할까? 활동량과 에너지 관리 가이드', category: '#운동', href: '/concerns/joint' },
-    { title: '목욕, 자주 해도 괜찮을까? 피부 타입별 목욕 가이드', category: '#목욕', href: '/concerns/grooming' },
-    { title: '분리불안, 혼자 두는 연습이 필요할 때', category: '#행동', href: '/concerns/stress' },
+    { title: '강아지가 자꾸 긁어요. 피부 가려움의 원인과 관리법', category: '#피부', href: '/concerns/skin', image: '/images/hero-bg.jpg' },
+    { title: '장 건강이 면역력의 시작! 유산균과 식이섬유의 중요성', category: '#영양', href: '/concerns/nutrition', image: '/images/poodle-pet-food.png' },
+    { title: '산책, 얼마나 해야 적당할까? 활동량과 에너지 관리 가이드', category: '#운동', href: '/concerns/joint', image: '/images/hero-curation-visual-natural.png' },
+    { title: '목욕, 자주 해도 괜찮을까? 피부 타입별 목욕 가이드', category: '#목욕', href: '/concerns/grooming', image: '/images/care-guide-hero-cat.webp' },
+    { title: '분리불안, 혼자 두는 연습이 필요할 때', category: '#행동', href: '/concerns/stress', image: '/images/brand-curation-hero.webp' },
   ];
 
   const faqs = [
@@ -69,13 +69,14 @@ export default function ConcernsPage() {
 
         {/* 3. 주요 고민 카드 8개 */}
         <section className="mb-[40px] md:mb-[52px]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-4">
             {mainConcerns.map((concern, index) => (
-              <MainConcernCard 
-                key={concern.slug} 
-                concern={concern} 
-                index={String(index + 1).padStart(2, '0')} 
-              />
+              <div key={concern.slug} className="w-[80vw] sm:w-[320px] md:w-auto shrink-0 snap-start">
+                <MainConcernCard
+                  concern={concern}
+                  index={String(index + 1).padStart(2, '0')}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -86,13 +87,14 @@ export default function ConcernsPage() {
             <h2 className="text-[18px] md:text-[20px] font-bold text-[#17231E] tracking-tight">추가로 살펴볼 생활 케어</h2>
             <p className="mt-1 text-[13px] md:text-[14px] text-[#72766F]">일상에서 함께 확인하면 좋은 관리 주제입니다.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-4">
             {subConcerns.map((concern, index) => (
-              <SubConcernCard 
-                key={concern.slug} 
-                concern={concern} 
-                index={String(index + 9).padStart(2, '0')} 
-              />
+              <div key={concern.slug} className="w-[85vw] sm:w-[320px] md:w-auto shrink-0 snap-start">
+                <SubConcernCard
+                  concern={concern}
+                  index={String(index + 9).padStart(2, '0')}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -131,31 +133,49 @@ export default function ConcernsPage() {
         </section>
 
         {/* 6. 함께 알아두면 좋은 정보 */}
-        <section className="mb-[48px] md:mb-[64px] bg-[#F2EEE5] rounded-[20px] p-[26px] md:p-[32px]">
-          <div className="flex items-center justify-between mb-5 md:mb-6">
-            <h2 className="text-[18px] md:text-[20px] font-bold text-[#17231E]">함께 알아두면 좋은 정보</h2>
-            <Link href="/concerns" className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-white rounded-full border border-[#E4DDD1] text-[13px] font-bold text-[#17231E] hover:bg-[#F8F6F0] transition-colors">
+        <section className="mb-12 rounded-[20px] bg-[#F2EEE5] p-6 md:mb-16 md:p-8">
+          <div className="mb-6 flex items-end justify-between md:mb-8">
+            <div>
+              <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.12em] text-[#A8742E]">CARE EDIT</span>
+              <h2 className="text-[20px] font-bold tracking-tight text-[#17231E] md:text-[24px]">함께 알아두면 좋은 정보</h2>
+            </div>
+            <Link href="/concerns" className="hidden min-h-10 items-center gap-1.5 rounded-full border border-[#E4DDD1] bg-white px-4 text-[13px] font-bold text-[#17231E] transition-colors hover:bg-[#F8F6F0] sm:flex">
               모든 케어 가이드 보기 <ArrowRight className="size-3.5" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-[14px] md:gap-[18px]">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {infoCards.map((info, idx) => (
-              <Link key={idx} href={info.href} className="flex flex-col bg-white rounded-[16px] overflow-hidden border border-[#E4DDD1] hover:-translate-y-1 transition-transform duration-300">
-                <div className="w-full aspect-[4/3] bg-[#F8F6F0] flex flex-col items-center justify-center p-4">
-                   <div className="size-10 rounded-full bg-[#E4DDD1] flex items-center justify-center mb-2">
-                     <Search className="size-5 text-[#72766F]" />
-                   </div>
-                   <span className="text-[12px] text-[#72766F] font-medium text-center">관련 정보 살펴보기</span>
+              <Link
+                key={info.href}
+                href={info.href}
+                aria-label={`${info.title} 케어 가이드 보기`}
+                className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E4DDD1] bg-white transition-all duration-700 ease-out hover:-translate-y-1 hover:border-[#D8C4A3] hover:shadow-[0_20px_40px_-15px_rgba(23,33,29,0.08)]"
+              >
+                <div className="relative aspect-square w-full overflow-hidden bg-[#F8F6F0]">
+                  <Image
+                    src={info.image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 639px) 40vw, (max-width: 1023px) 30vw, 220px"
+                    className="object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
+                  />
+                  <span className="absolute left-3 top-3 rounded-full border border-white/70 bg-white/90 px-2.5 py-1 text-[10px] font-bold text-[#6F766F] backdrop-blur-sm md:left-4 md:top-4 md:px-3 md:py-1.5 md:text-[11px]">
+                    {info.category}
+                  </span>
                 </div>
-                <div className="p-4 flex flex-col gap-3">
-                  <h3 className="text-[14px] md:text-[15px] font-bold text-[#17231E] leading-[1.5] break-keep line-clamp-2">{info.title}</h3>
-                  <span className="text-[12px] text-[#72766F]">{info.category}</span>
+                <div className="flex flex-1 flex-col p-4 md:p-5">
+                  <span className="font-editorial text-[11px] italic tracking-wide text-[#A8742E] md:text-[12px]">Care note {String(idx + 1).padStart(2, '0')}</span>
+                  <h3 className="mt-2 break-keep text-[14px] font-bold leading-[1.55] text-[#17231E] md:mt-3 md:text-[16px]">{info.title}</h3>
+                  <span className="mt-auto inline-flex items-center gap-1.5 pt-5 text-[12px] font-bold text-[#17231E] md:text-[13px]">
+                    케어 가이드 보기
+                    <ArrowRight className="size-3.5 shrink-0 text-[#A8742E] transition-transform duration-500 group-hover:translate-x-1 md:size-4" aria-hidden="true" />
+                  </span>
                 </div>
               </Link>
             ))}
           </div>
-          <div className="mt-5 sm:hidden flex justify-center">
-            <Link href="/concerns" className="flex items-center gap-1.5 px-5 py-2.5 bg-white rounded-full border border-[#E4DDD1] text-[13px] font-bold text-[#17231E]">
+          <div className="mt-4 flex sm:hidden">
+            <Link href="/concerns" className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full border border-[#E4DDD1] bg-white px-5 text-[13px] font-bold text-[#17231E]">
               모든 케어 가이드 보기 <ArrowRight className="size-3.5" />
             </Link>
           </div>
