@@ -70,10 +70,10 @@ export default function ProductDetailClient({ product }: Props) {
     <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
       {/* Image Gallery */}
       <div className="w-full lg:w-1/2">
-        <div className="flex aspect-square w-full items-center justify-center rounded-[18px] border border-[rgba(15,23,42,0.08)] bg-white p-12 shadow-sm overflow-hidden relative group">
-          <div className="flex h-full w-[72%] flex-col items-center justify-center border border-[rgba(15,23,42,0.04)] bg-[#FBFAF7] text-center shadow-sm rounded-xl group-hover:scale-[1.02] transition-transform duration-500">
-            <span className="font-editorial text-6xl italic text-slate-300">{product.category.slice(0, 1)}</span>
-            <span className="mt-6 text-[10px] font-semibold tracking-widest text-[#17211D]">BAEKJO CURATION</span>
+        <div className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[18px] border border-[rgba(15,23,42,0.08)] bg-white p-6 md:p-12 shadow-sm">
+          <div className="flex h-full w-[80%] md:w-[72%] flex-col items-center justify-center rounded-xl border border-[rgba(15,23,42,0.04)] bg-[#FBFAF7] text-center shadow-sm transition-transform duration-500 group-hover:scale-[1.02]">
+            <span className="font-editorial text-5xl md:text-6xl italic text-slate-300">{product.category.slice(0, 1)}</span>
+            <span className="mt-4 md:mt-6 text-[10px] font-semibold tracking-widest text-[#17211D]">BAEKJO CURATION</span>
             <span className="mt-2 text-[10px] text-slate-400">{product.name}</span>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function ProductDetailClient({ product }: Props) {
               <select 
                 value={selectedOption}
                 onChange={(e) => setSelectedOption(e.target.value)}
-                className="w-full appearance-none rounded-[12px] border border-[rgba(15,23,42,0.12)] bg-white px-4 py-4 text-sm text-[#17211D] focus:border-[#17211D] focus:outline-none focus:ring-1 focus:ring-[#17211D] shadow-sm transition-all"
+                className="w-full appearance-none rounded-[12px] border border-[rgba(15,23,42,0.12)] bg-white px-4 py-3 md:py-4 text-sm text-[#17211D] shadow-sm transition-all focus:border-[#17211D] focus:outline-none focus:ring-1 focus:ring-[#17211D]"
               >
                 {product.options.map(opt => (
                   <option key={opt.id} value={opt.id}>
@@ -204,14 +204,14 @@ export default function ProductDetailClient({ product }: Props) {
         )}
 
         {/* Action Buttons */}
-        <div className="mt-8 flex gap-3">
+        <div className="mt-6 md:mt-8 flex gap-2 md:gap-3">
           <button 
             type="button"
             aria-label={wishlisted ? '찜 해제' : '찜하기'}
             onClick={handleWishlist}
-            className={`flex h-[60px] w-[60px] items-center justify-center shrink-0 rounded-[16px] border transition-all shadow-sm ${wishlisted ? 'border-red-500 bg-red-50 text-red-500' : 'border-[rgba(15,23,42,0.12)] bg-white text-slate-400 hover:border-[#17211D] hover:text-[#17211D]'}`}
+            className={`flex h-[54px] w-[54px] md:h-[60px] md:w-[60px] shrink-0 items-center justify-center rounded-[16px] border shadow-sm transition-all ${wishlisted ? 'border-red-500 bg-red-50 text-red-500' : 'border-[rgba(15,23,42,0.12)] bg-white text-slate-400 hover:border-[#17211D] hover:text-[#17211D]'}`}
           >
-            <Heart className={`h-6 w-6 ${wishlisted ? 'fill-current' : ''}`} strokeWidth={wishlisted ? 1.5 : 2} />
+            <Heart className={`h-5 w-5 md:h-6 md:w-6 ${wishlisted ? 'fill-current' : ''}`} strokeWidth={wishlisted ? 1.5 : 2} />
           </button>
           
           {hasPrice ? (
@@ -219,23 +219,23 @@ export default function ProductDetailClient({ product }: Props) {
               <button 
                 type="button"
                 onClick={handleAddToCart}
-                className="flex h-[60px] flex-1 items-center justify-center rounded-[16px] border border-[rgba(15,23,42,0.12)] bg-white text-base font-semibold text-[#17211D] hover:bg-slate-50 hover:border-[#17211D] transition-all shadow-sm"
+                className="flex h-[54px] md:h-[60px] flex-1 items-center justify-center rounded-[16px] border border-[rgba(15,23,42,0.12)] bg-white text-[14px] md:text-base font-semibold text-[#17211D] shadow-sm transition-all hover:border-[#17211D] hover:bg-slate-50"
               >
-                <ShoppingCart className="mr-2 h-5 w-5" /> 장바구니
+                <ShoppingCart className="mr-1.5 md:mr-2 h-4 w-4 md:h-5 md:w-5" /> 장바구니
               </button>
               <button 
                 type="button"
                 onClick={handleBuyNow}
-                className="flex h-[60px] flex-1 items-center justify-center rounded-[16px] bg-[#17211D] text-base font-semibold text-white hover:bg-[#334155] transition-all shadow-md"
+                className="flex h-[54px] md:h-[60px] flex-1 items-center justify-center rounded-[16px] bg-[#17211D] text-[14px] md:text-base font-semibold text-white shadow-md transition-all hover:bg-[#334155]"
               >
-                <CreditCard className="mr-2 h-5 w-5" /> 바로구매
+                <CreditCard className="mr-1.5 md:mr-2 h-4 w-4 md:h-5 md:w-5" /> 바로구매
               </button>
             </>
           ) : (
             <button 
               type="button"
               onClick={() => router.push('/login')}
-              className="flex h-[60px] flex-1 items-center justify-center rounded-[16px] bg-[#17211D] text-base font-semibold text-white hover:bg-[#334155] transition-all shadow-md"
+              className="flex h-[54px] md:h-[60px] flex-1 items-center justify-center rounded-[16px] bg-[#17211D] text-[14px] md:text-base font-semibold text-white shadow-md transition-all hover:bg-[#334155]"
             >
               로그인 후 가격 확인
             </button>
