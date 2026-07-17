@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, ArrowLeft, Trash2 } from 'lucide-react';
+import { Save, ArrowLeft, Trash2, LayoutTemplate } from 'lucide-react';
 import type { Product, Brand, ProductOption } from '@/types';
 import { createProduct, updateProduct, deleteProduct } from '@/lib/storage';
 import { useCategorySettings } from '@/components/providers/CategorySettingsProvider';
@@ -205,12 +205,23 @@ export default function ProductForm({ initialData, brands }: ProductFormProps) {
               </FormField>
 
               <FormField label="간단 텍스트 상세">
-                <textarea 
-                  value={formData.description || ''} 
-                  onChange={e => handleChange('description', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-[14px] h-24 focus:border-[#17201B] focus:ring-1 focus:ring-[#17201B] outline-none resize-none"
-                  placeholder="간단한 상세 설명을 입력하세요 (상세페이지 에디터를 사용하려면 비워두세요)"
-                />
+                <div className="space-y-3">
+                  <textarea
+                    value={formData.description || ''}
+                    onChange={e => handleChange('description', e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-[14px] h-24 focus:border-[#17201B] focus:ring-1 focus:ring-[#17201B] outline-none resize-none"
+                    placeholder="간단한 상세 설명을 입력하세요 (상세페이지 에디터를 사용하려면 비워두세요)"
+                  />
+                  {isEdit && initialData?.id && (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/admin/products/${initialData.id}/editor`)}
+                      className="w-full px-4 py-2 border border-gray-200 text-[#17201B] font-medium text-[13px] rounded bg-white hover:bg-gray-50 flex items-center justify-center gap-2"
+                    >
+                      <LayoutTemplate size={16} /> 고급 상세페이지 에디터로 이동
+                    </button>
+                  )}
+                </div>
               </FormField>
             </div>
           </div>
