@@ -189,6 +189,11 @@ export function validateProductFields(
     out.description = b.description;
   } else if (requireAll) return null;
 
+  if (b.detailBlocks !== undefined) {
+    if (b.detailBlocks !== null && !Array.isArray(b.detailBlocks)) return null;
+    out.detailBlocks = b.detailBlocks as Product['detailBlocks'];
+  }
+
   if (b.shippingNotice !== undefined) {
     if (!isOptStr(b.shippingNotice, MAX_TEXT)) return null;
     out.shippingNotice = b.shippingNotice;

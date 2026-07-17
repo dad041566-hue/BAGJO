@@ -46,6 +46,12 @@ function rowToProduct(row: ProductRow): Product {
     id: row.id,
     brandId: row.brand_id ?? '',
     name: row.name,
+    sourceUrl: typeof d.sourceUrl === 'string' ? d.sourceUrl : undefined,
+    sourceVerifiedAt: typeof d.sourceVerifiedAt === 'string' ? d.sourceVerifiedAt : undefined,
+    catalogStatus:
+      d.catalogStatus === 'draft' || d.catalogStatus === 'ready' || d.catalogStatus === 'sold_out'
+        ? d.catalogStatus
+        : undefined,
     price: row.price,
     salePrice: row.sale_price,
     rating: row.rating,

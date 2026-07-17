@@ -1,11 +1,11 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import ProductDetailEditor from '@/components/admin-new/products/ProductDetailEditor';
-import { getAdminProducts } from '@/lib/storage';
+import { getProductById } from '@/lib/products/repo';
 
-export default async function ProductDetailEditorPage({ params }: { params: { id: string } }) {
-  const products = await getAdminProducts();
-  const product = products.find(p => p.id === params.id);
+export default async function ProductDetailEditorPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const product = await getProductById(resolvedParams.id, { includeHidden: true });
 
   if (!product) {
     notFound();
