@@ -11,6 +11,8 @@ import { logServerError } from '@/lib/logServerError';
 import EmptyState from '@/components/common/EmptyState';
 import ProductCard from '@/components/common/ProductCard';
 import ReviewCard from '@/components/common/ReviewCard';
+import ExpandableText from '@/components/common/ExpandableText';
+import AuditAccordion from '@/components/common/AuditAccordion';
 import ProductDetailClient from '@/components/shop/ProductDetailClient';
 import { formatDate } from '@/lib/format';
 
@@ -40,8 +42,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     .filter((candidate) => candidate.id !== product.id && (
       candidate.category === product.category
       || candidate.concernTags.some((tag) => product.concernTags.includes(tag))
-    ))
-    .slice(0, 4);
+    ));
   const productReviews = reviews.filter((review) => review.productId === product.id);
   // Q&A 는 DB 싱글턴 config(콘센트=서버 repo)에서 읽고, 공개 화면이라 실패 시 기본 문의로 폴백한다(500 금지).
   let qnaItems = defaultQnaConfig.items;
@@ -53,7 +54,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   }
   const productQna = qnaItems.filter((qna) => qna.productId === product.id);
   const brandProducts = brand
-    ? allProducts.filter((candidate) => brand.representativeProductIds.includes(candidate.id)).slice(0, 3)
+    ? allProducts.filter((candidate) => brand.representativeProductIds.includes(candidate.id))
     : [];
   const recommendedFor = product.recommendedFor?.length ? product.recommendedFor : defaultRecommendations;
   const cautions = product.caution?.length ? product.caution : defaultCautions;
@@ -87,10 +88,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
         <div className="space-y-20 py-12 lg:space-y-28 lg:py-20">
           <section id="story" className="scroll-mt-36">
-            <div className="mx-auto max-w-3xl">
+            <div className="mx-auto max-w-3xl rounded-[28px] border border-[#E7E0D5] bg-[#FAF8F3] p-6 sm:p-10">
               <p className="page-eyebrow">상품 이야기</p>
               <h2 className="section-title mt-3">일상에서 이렇게 만나보세요.</h2>
-              <p className="body-copy mt-5">{product.description}</p>
+              <ExpandableText
+                text={product.description}
+                collapsedLines={3}
+                previewThreshold={140}
+                className="body-copy mt-5"
+              />
               {product.detailBlocks && product.detailBlocks.length > 0 ? (
                 <div className="mt-8 overflow-hidden rounded-3xl">
                   {product.detailBlocks.map((block, index) =>
@@ -137,36 +143,43 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 <p className="page-eyebrow">성분과 사용법</p>
                 <h2 className="section-title mt-3">아이에게 닿는 정보부터 확인해요.</h2>
               </div>
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="flex snap-x snap-mandatory overflow-x-auto pb-4 hide-scrollbar md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:pb-0">
+                <div className="w-[85vw] shrink-0 snap-center sm:w-[400px] md:w-auto pr-4 md:pr-0">
                 <InfoCard
                   title="성분·소재"
                   description={product.ingredients || '상품 패키지에 표시된 성분과 소재 정보를 확인해 정리하고 있어요.'}
                 />
-                <InfoCard
-                  title="급여·사용 방법"
+                </div>
+                <div className="w-[85vw] shrink-0 snap-center sm:w-[400px] md:w-auto pr-4 md:pr-0">
+                  <InfoCard
+                    title="급여·사용 방법"
                   description={
                     product.howToUse ||
                     '아이의 체중과 건강 상태를 살피고, 패키지에 안내된 권장량과 사용 방법을 먼저 확인해 주세요.'
                   }
                 />
+                </div>
               </div>
 
-              <div className="mt-5 grid gap-5 md:grid-cols-2">
-                <ChecklistCard title="함께 확인하면 좋아요" items={recommendedFor} tone="positive" />
-                <ChecklistCard title="조금 더 주의해 주세요" items={cautions} tone="caution" />
+              <div className="mt-4 md:mt-5 flex snap-x snap-mandatory overflow-x-auto pb-4 hide-scrollbar md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:pb-0">
+                <div className="w-[85vw] shrink-0 snap-center sm:w-[400px] md:w-auto pr-4 md:pr-0">
+                  <ChecklistCard title="함께 확인하면 좋아요" items={recommendedFor} tone="positive" />
+                </div>
+                <div className="w-[85vw] shrink-0 snap-center sm:w-[400px] md:w-auto pr-4 md:pr-0">
+                  <ChecklistCard title="조금 더 주의해 주세요" items={cautions} tone="caution" />
+                </div>
               </div>
             </div>
           </section>
 
           <section id="standard" className="scroll-mt-36">
-            <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl bg-[#202521] p-7 text-[#FBFAF7] sm:p-10">
+            <AuditAccordion
+              title={brand?.auditReport ? '확인한 내용을 솔직하게 전해요.' : '브랜드 자료를 차근차근 살펴보고 있어요.'}
+              subtitle="백조가 살펴본 내용"
+            >
               <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
                 <div>
-                  <p className="font-editorial text-sm italic tracking-wide text-[#D8C4A3]">백조가 살펴본 내용</p>
-                  <h2 className="mt-3 break-keep text-2xl font-bold tracking-tight text-[#FBFAF7] sm:text-3xl">
-                    {brand?.auditReport ? '확인한 내용을 솔직하게 전해요.' : '브랜드 자료를 차근차근 살펴보고 있어요.'}
-                  </h2>
-                  <p className="mt-5 break-keep text-sm leading-7 text-[#FBFAF7]/70">
+                  <p className="break-keep text-sm leading-7 text-[#FBFAF7]/70">
                     {brand?.auditReport
                       ? '브랜드가 제공한 자료와 공개 정보를 바탕으로 정리한 내용이에요. 새로운 정보가 확인되면 계속 업데이트할게요.'
                       : '아직 모든 확인이 끝나지 않았어요. 판매를 시작하기 전에 필요한 자료와 상품 정보를 더 살펴볼게요.'}
@@ -198,7 +211,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   )}
                 </div>
               </div>
-            </div>
+            </AuditAccordion>
           </section>
 
           <section id="reviews" className="scroll-mt-36">
@@ -212,9 +225,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               </Link>
             </div>
             {productReviews.length > 0 ? (
-              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              <div className="horizontal-snap-rail pb-4">
                 {productReviews.map((review) => (
-                  <ReviewCard key={review.id} review={review} productName={product.name} />
+                  <div key={review.id} className="horizontal-snap-item md:basis-[calc(50%-0.5rem)] lg:basis-[calc(33.333%-0.667rem)]">
+                    <ReviewCard review={review} productName={product.name} />
+                  </div>
                 ))}
               </div>
             ) : (
@@ -268,13 +283,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
           {relatedProducts.length > 0 && (
             <section>
-              <div className="mb-8">
+              <div className="mb-6 md:mb-8">
                 <p className="page-eyebrow">함께 둘러보기</p>
-                <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#17211D]">이런 상품도 함께 살펴보세요.</h2>
+                <h2 className="mt-2 text-xl md:text-2xl font-bold tracking-tight text-[#17211D]">이런 상품도 함께 살펴보세요.</h2>
               </div>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 xl:grid-cols-4 xl:gap-6">
+              <div className="horizontal-snap-rail pb-4">
                 {relatedProducts.map((item) => (
-                  <ProductCard key={item.id} product={item} />
+                  <div key={item.id} className="horizontal-snap-item sm:basis-[18.75rem] lg:basis-[calc(25%-0.75rem)]">
+                    <ProductCard product={item} />
+                  </div>
                 ))}
               </div>
             </section>
@@ -294,7 +311,12 @@ function InfoCard({ title, description }: InfoCardProps) {
   return (
     <div className="premium-card p-6 sm:p-8">
       <h3 className="text-base font-bold text-[#17211D]">{title}</h3>
-      <p className="mt-4 break-keep text-sm leading-7 text-[#6F766F]">{description}</p>
+      <ExpandableText
+        text={description}
+        collapsedLines={3}
+        previewThreshold={110}
+        className="mt-4 break-keep text-sm leading-[1.6] text-[#6F766F]"
+      />
     </div>
   );
 }
