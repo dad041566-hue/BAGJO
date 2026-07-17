@@ -33,8 +33,9 @@ export default async function ReviewsPage({
   const avgRating = (reviews.reduce((acc, cur) => acc + cur.rating, 0) / reviews.length).toFixed(1);
   const photoReviewsCount = reviews.filter(r => r.isPhotoReview).length;
   
-  // 사진 후기 모아보기 용도 (최근 6개)
-  const recentPhotoReviews = [...reviews].filter(r => r.isPhotoReview).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 6);
+  const recentPhotoReviews = [...reviews]
+    .filter((review) => review.isPhotoReview)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <div className="bg-[#FAF9F5] min-h-dvh pb-24 text-[#1A1D1B]" style={{ wordBreak: 'keep-all' }}>

@@ -2,14 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, ChevronDown, ShieldCheck, ChevronRight, MessageCircleQuestion, Home, PlusSquare, Search } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, ChevronRight, MessageCircleQuestion, Home, PlusSquare, Search } from 'lucide-react';
 import { concerns } from '@/data/concerns';
 import { listProducts } from '@/lib/products/repo';
 import { listBrands } from '@/lib/brands/repo';
 import { reviews } from '@/data/reviews';
 import BrandLogo from '@/components/common/BrandLogo';
 import EmptyState from '@/components/common/EmptyState';
-import { SectionHeading } from '@/components/common/EditorialHeading';
 import ProductCard from '@/components/common/ProductCard';
 import ReviewCard from '@/components/common/ReviewCard';
 
@@ -253,14 +252,14 @@ export default async function ConcernDetailPage({ params }: ConcernDetailPagePro
           </div>
           
           {recommendedBrands.length > 0 ? (
-            <div className="grid gap-4 lg:gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="horizontal-snap-rail pb-4">
               {recommendedBrands.map((brand) => {
                 const relatedProductsCount = allProducts.filter(p => p.brandId === brand.id).length;
                 return (
                   <Link
                     key={brand.id}
                     href={`/brands/${brand.id}`}
-                    className="group flex flex-col justify-between h-[210px] lg:h-[240px] rounded-[16px] lg:rounded-[18px] border border-[#E4DDD1] bg-[#FFFEFB] p-6 transition-transform duration-300 hover:-translate-y-[2px]"
+                    className="horizontal-snap-item group flex min-h-[210px] flex-col justify-between rounded-[16px] border border-[#E4DDD1] bg-[#FFFEFB] p-6 transition-transform duration-300 hover:-translate-y-[2px] lg:min-h-[240px] lg:rounded-[18px] lg:basis-[calc(25%-0.75rem)]"
                   >
                     <div>
                       <div className="h-[44px] flex items-center mb-5">
@@ -269,7 +268,7 @@ export default async function ConcernDetailPage({ params }: ConcernDetailPagePro
                       <h3 className="break-keep text-[16px] lg:text-[17px] font-bold tracking-tight text-[#17251F]">
                         {brand.name} <span className="font-editorial font-normal text-[14px] text-[#72766F]">({brand.name.replace(/[^a-zA-Z\s()]/g, '').trim() || brand.id})</span>
                       </h3>
-                      <p className="mt-2 line-clamp-3 break-keep text-[13px] leading-[1.6] text-[#72766F]">
+                      <p className="mt-2 break-keep text-[13px] leading-[1.6] text-[#72766F]">
                         {brand.description}
                       </p>
                     </div>
@@ -367,10 +366,14 @@ export default async function ConcernDetailPage({ params }: ConcernDetailPagePro
           </div>
           
           {relatedReviews.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:gap-5 xl:gap-6">
-              {relatedReviews.slice(0, 4).map((review) => {
+            <div className="horizontal-snap-rail pb-4">
+              {relatedReviews.map((review) => {
                 const product = allProducts.find((item) => item.id === review.productId);
-                return <ReviewCard key={review.id} review={review} productName={product?.name} />;
+                return (
+                  <div key={review.id} className="horizontal-snap-item md:basis-[calc(50%-0.5rem)]">
+                    <ReviewCard review={review} productName={product?.name} />
+                  </div>
+                );
               })}
             </div>
           ) : (
