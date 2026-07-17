@@ -132,7 +132,7 @@ export default function NoticesPage() {
                       </span>
                     </div>
                     <div className="min-w-0 pl-4 pr-8 text-left">
-                      <h2 className="truncate text-[15px] font-bold text-[#1A1D1B] group-hover:underline underline-offset-4">
+                      <h2 className="break-keep text-[15px] font-bold leading-[1.5] text-[#1A1D1B] group-hover:underline underline-offset-4">
                         {notice.title}
                       </h2>
                     </div>

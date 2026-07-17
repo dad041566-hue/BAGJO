@@ -32,12 +32,12 @@ export default function MypageLayout({ children }: { children: React.ReactNode }
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-base md:text-lg font-bold text-[#17251F] flex items-center gap-2">
-                  <span className="truncate">{user.companyName || user.name || '고객'}</span>
+                  <span className="break-keep leading-[1.5]">{user.companyName || user.name || '고객'}</span>
                 </div>
                 <div className="text-[11px] md:text-xs font-semibold text-[#B58A4C] mt-0.5">
                   {user.role === 'partner' ? '입점업체' : user.role === 'insurance' ? '보험사회원' : user.role === 'b2b' ? 'B2B회원' : '일반회원'}
                 </div>
-                <div className="text-xs text-[#6F756F] font-medium mt-1 truncate">
+                <div className="mt-1 break-all text-xs font-medium leading-[1.5] text-[#6F756F]">
                   {isPlaceholderEmail ? '이메일 미등록' : user.email}
                 </div>
                 {providerLabel && (

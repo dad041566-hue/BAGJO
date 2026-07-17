@@ -49,7 +49,7 @@ export default function MypageInsurancePage() {
               <div>
                 <div className="text-xs text-[#6F756F] mb-1">{formatDate(app.createdAt)} 신청</div>
                 <div className="font-bold text-[#17251F]">{app.petName} ({app.petBreed}, {app.petAge}살)</div>
-                <div className="text-sm text-[#6F756F] mt-1 line-clamp-1">{app.concerns || '특별한 건강 고민 없음'}</div>
+                <div className="mt-1 break-keep text-sm leading-[1.6] text-[#6F756F]">{app.concerns || '특별한 건강 고민 없음'}</div>
               </div>
               <div>
                 <span className="px-4 py-1.5 rounded-full text-sm font-bold bg-[#F2EEE6] text-[#16382D]">
