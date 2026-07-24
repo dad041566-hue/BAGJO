@@ -28,16 +28,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <>
         <FocusHeader />
-        <main className="public-main min-w-0 flex-1 overflow-x-clip">{children}</main>
+        <main className="public-main min-w-0 flex-1 overflow-x-clip pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
       </>
     );
   }
 
+  const isHome = pathname === '/';
+
   return (
     <>
       <Header />
-      <main className="public-main min-w-0 flex-1 overflow-x-clip pb-20 md:pb-0">{children}</main>
-      <Footer />
+      <main className="public-main min-w-0 flex-1 overflow-x-clip pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
+      <Footer variant={isHome ? 'home' : 'default'} />
       <MobileBottomNav />
     </>
   );
