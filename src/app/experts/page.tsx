@@ -1,4 +1,4 @@
-import { Stethoscope, Utensils, Activity, Search, ShieldCheck, ListChecks, FileText, Info, ArrowRight } from 'lucide-react';
+import { Stethoscope, Utensils, Activity, Search, ShieldCheck, ListChecks, FileText, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { listProducts } from '@/lib/products/repo';
@@ -38,11 +38,11 @@ export default async function ExpertsPage({
                  <p className="font-editorial text-[12px] tracking-widest text-[#A8742E] font-semibold uppercase mb-4">
                     Expert&apos;s View
                  </p>
-                 <h1 className="text-[38px] md:text-[46px] font-bold text-[#1A1D1B] leading-[1.25] tracking-[-0.035em] break-keep mb-5">
+                 <h1 className="text-[32px] md:text-[38px] lg:text-[46px] font-bold text-[#1A1D1B] leading-[1.25] tracking-[-0.035em] break-keep mb-5 min-w-0">
                     전문가 관점으로 살펴보는<br />
                     상품 선택 기준
                  </h1>
-                 <p className="text-[14px] md:text-[15px] text-[#5F6761] leading-[1.65] break-keep">
+                 <p className="text-[14px] md:text-[15px] text-[#5F6761] leading-[1.65] break-keep min-w-0">
                     백조오브제가 수의·영양·행동 전문가의 관점을 바탕으로<br />
                     우리 아이에게 맞는 상품 선택 기준을 정리했습니다.
                  </p>
@@ -52,7 +52,8 @@ export default async function ExpertsPage({
                  <div className="relative w-full h-full max-w-[400px]">
                     {/* 이미지가 없을 경우를 대비한 구조. 실제 프로젝트에 전문가 이미지 에셋이 있다면 교체. 
                         현재 에셋이 확실치 않아 투명 배경의 강아지 이미지라고 가정합니다. */}
-                    <Image src="/images/experts-dog.png" alt="전문가 추천 강아지" fill className="object-contain object-bottom" />
+                    {/* TODO(dad): experts-dog.png 원본이 dad 레포에 미커밋 상태 — 확보되면 교체 */}
+                    <Image src="/images/poodle-pet-food.png" alt="전문가 추천 강아지" fill className="object-contain object-bottom" />
                  </div>
               </div>
            </div>
@@ -130,7 +131,11 @@ export default async function ExpertsPage({
       <section className="mt-20">
         <div className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-12">
           <h2 className="text-[20px] font-bold text-[#1A1D1B] mb-8">상품은 이렇게 살펴봅니다.</h2>
-          <div className="flex flex-col md:flex-row items-center justify-between relative px-2">
+          <div
+            className="hide-scrollbar -mx-5 flex snap-x snap-mandatory scroll-px-5 items-stretch gap-4 overflow-x-auto px-5 pb-4 md:mx-0 md:items-center md:justify-between md:overflow-visible md:px-2 md:pb-0"
+            role="region"
+            aria-label="상품 선정 과정 네 단계"
+          >
             
             {[
               { icon: Search, title: '반려동물 상태 확인', num: '01' },
@@ -138,23 +143,17 @@ export default async function ExpertsPage({
               { icon: ListChecks, title: '제조·사용 기준 확인', num: '03' },
               { icon: FileText, title: '실제 사용 목적과 적합성 정리', num: '04' }
             ].map((step, idx) => (
-              <div key={idx} className="flex flex-col items-center gap-4 z-10 w-full md:w-[22%] py-4 md:py-0 relative">
+              <div key={idx} className="relative z-10 flex min-h-[176px] w-[78vw] max-w-[316px] shrink-0 snap-start flex-col items-start gap-4 rounded-[20px] border border-[#E7E0D5] bg-white p-5 md:min-h-0 md:w-[22%] md:max-w-none md:items-center md:border-0 md:bg-transparent md:p-0">
                 <div className="font-editorial text-[14px] font-semibold text-[#1A1D1B]">{step.num}</div>
-                <div className="flex size-[64px] md:size-[72px] shrink-0 items-center justify-center rounded-full bg-white shadow-sm border border-[#EBE8E1] text-[#1A221E]">
+                <div className="flex size-[56px] shrink-0 items-center justify-center rounded-full border border-[#EBE8E1] bg-[#FAF8F3] text-[#1A221E] shadow-sm md:size-[72px] md:bg-white">
                   <step.icon className="size-6 md:size-7 text-[#5F6761]" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-[14px] md:text-[15px] font-bold text-[#1A1D1B] break-keep text-center leading-snug w-[70%]">{step.title}</h3>
+                <h3 className="mt-auto w-full break-keep text-left text-[16px] font-bold leading-snug text-[#1A1D1B] md:mt-0 md:w-[70%] md:text-center md:text-[15px]">{step.title}</h3>
                 
                 {/* 화살표 */}
                 {idx < 3 && (
                    <div className="hidden md:block absolute right-[-15%] top-[50%] -translate-y-1/2 text-[#D8D6CE]">
                       <ArrowRight className="size-5" />
-                   </div>
-                )}
-                {/* 모바일 화살표 */}
-                {idx < 3 && (
-                   <div className="md:hidden mt-2 text-[#D8D6CE]">
-                      <ArrowRight className="size-5 rotate-90" />
                    </div>
                 )}
               </div>

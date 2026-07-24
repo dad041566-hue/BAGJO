@@ -1,350 +1,376 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { Fragment } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
-  ArrowRight, ShieldCheck, Activity, Leaf, Monitor, Heart,
-  Droplet, Sparkles, Bone, Scale, Grid, Dog, Cat, Utensils, Bath, HeartPulse, Stethoscope, Store
+  ArrowRight, ShieldCheck,
+  Droplet, Sparkles, Bone, Scale, Grid, Dog, Cat, Rabbit, Utensils, Bath, HeartPulse, Stethoscope, Store
 } from 'lucide-react';
-import { notices } from '@/data/notices';
-import { reviews } from '@/data/reviews';
+import { defaultHomeSettings, type HomeSettings } from '@/data/homeContent';
 import BrandShowcaseSlider from '@/components/home/BrandShowcaseSlider';
 import ProductCard from '@/components/common/ProductCard';
 import ReviewCard from '@/components/common/ReviewCard';
 import { sortProducts } from '@/lib/filters';
 import { formatDate } from '@/lib/format';
-import type { Brand, Product } from '@/types';
+import type { Brand, Notice, Product, Review } from '@/types';
 
-export default function HomeClient({ products, brands }: { products: Product[]; brands: Brand[] }) {
-  const bestProducts = sortProducts(products.filter((product) => product.isBest || product.isRecommended), 'popular').slice(0, 4);
+// 줄바꿈�? 마크?�이 ?�니??구조(string[])�??�룬??§ homeContent). �?�??�이?�만 <br /> �?// ?�어 ?�드코딩 ?�절 DOM �??�일?�게 ?�더?�다. brClassName ?� 반응??줄바�??? 'hidden sm:block').
+function renderLines(lines: string[], brClassName?: string) {
+  return lines.map((line, i) => (
+    <Fragment key={i}>
+      {i > 0 && <br className={brClassName} />}
+      {line}
+    </Fragment>
+  ));
+}
+
+// 문자????"<br />" ?�는 "<br>" 리터?�이 ?�함??경우�??�전?�게 ?�더링한??
+// dangerouslySetInnerHTML ???�용?��? ?�고 split + Fragment 방식.
+function renderTextWithBr(text: string) {
+  const parts = text.split(/<br\s*\/?>/i);
+  if (parts.length <= 1) return text;
+  return parts.map((part, index) => (
+    <Fragment key={`${part}-${index}`}>
+      {index > 0 && <br />}
+      {part}
+    </Fragment>
+  ));
+}
+
+export default function HomeClient({
+  products,
+  brands,
+  notices,
+  reviews,
+  settings = defaultHomeSettings,
+}: {
+  products: Product[];
+  brands: Brand[];
+  notices: Notice[];
+  reviews: Review[];
+  settings?: HomeSettings;
+}) {
+  const bestProducts = sortProducts(
+    products.filter((product) => product.isBest || product.isRecommended),
+    'popular',
+  ).slice(0, 3);
   const recentNotices = notices.slice(0, 4);
   const displayBrands = brands.filter(b => b.isVisible !== false);
 
+  const { hero, quickShop, curation, audit, insuranceBanner, trustBoard } = settings;
+  const bestProductsCopy = settings.bestProducts;
+
+  // ?�이콘·href·?��?지 ??"구조"???�기 ?�드코딩?�로 ?�고, 문구�?settings �??�버?�이?�다.
   const quickLinks = [
-    { name: '전체 상품', icon: Grid, href: '/shop' },
-    { name: '강아지', icon: Dog, href: '/shop?petType=dog' },
-    { name: '고양이', icon: Cat, href: '/shop?petType=cat' },
-    { name: '사료·간식', icon: Utensils, href: '/shop?category=dining-and-nourish' },
-    { name: '위생·배변', icon: Bath, href: '/shop?category=fragrance-and-hygiene' },
-    { name: '건강관리', icon: HeartPulse, href: '/shop?category=wellness-and-care' },
-    { name: '고민별 케어', icon: Stethoscope, href: '/concerns' },
-    { name: '브랜드관', icon: Store, href: '/brands' },
+    { icon: Grid, href: '/shop' },
+    { icon: Dog, href: '/shop?petType=dog' },
+    { icon: Cat, href: '/shop?petType=cat' },
+    { icon: Rabbit, href: '/shop?petType=small' },
+    { icon: Utensils, href: '/shop?category=dining-and-nourish' },
+    { icon: Bath, href: '/shop?category=fragrance-and-hygiene' },
+    { icon: HeartPulse, href: '/shop?category=wellness-and-care' },
+    { icon: Stethoscope, href: '/concerns' },
+    { icon: Store, href: '/brands' },
   ];
 
   const curationCards = [
-    { title: '눈물', desc: '눈물 자국이 걱정될 때', icon: Droplet, href: '/concerns/tear', img: '/images/hero-curation-visual.png' },
-    { title: '피부', desc: '자주 긁거나 피부가 예민할 때', icon: Sparkles, href: '/concerns/skin', img: '/images/hero-bg.jpg' },
-    { title: '관절', desc: '걷거나 움직임이 불편해 보일 때', icon: Bone, href: '/concerns/joint', img: '/images/hero-curation-visual-natural.png' },
-    { title: '체중', desc: '체중 관리가 필요할 때', icon: Scale, href: '/concerns/obesity', img: '/images/care_guide_hero.png' },
+    { icon: Droplet, href: '/concerns/tear', img: '/images/curation_tear.png' },
+    { icon: Sparkles, href: '/concerns/skin', img: '/images/curation_skin.png' },
+    { icon: Bone, href: '/concerns/joint', img: '/images/curation_joint.png' },
+    { icon: Scale, href: '/concerns/obesity', img: '/images/curation_weight.png' },
   ];
 
   return (
-    <main className="flex flex-col bg-[#FCFBF8] min-h-screen pb-20">
-      {/* 1. 메인 히어로 */}
-      <section className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-14 pt-10 pb-14 lg:pt-14 lg:pb-16">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between lg:h-[500px] gap-10 lg:gap-14">
-          <div className="flex w-full flex-col items-start lg:w-[47%]">
-            <span className="block text-[11px] lg:text-[12px] font-bold tracking-[0.12em] text-[#B68B4E] uppercase mb-3 md:mb-4">PREMIUM PET CURATION</span>
-            <h1 className="text-[30px] sm:text-[34px] lg:text-[44px] font-bold leading-[1.18] tracking-[-0.035em] text-[#17231E] break-keep">
-              검증된 브랜드를<br />
-              우리 아이 고민에<br />
-              맞게.
-            </h1>
-            <p className="mt-5 md:mt-[20px] lg:mt-[24px] max-w-[500px] text-[15px] lg:text-[16px] leading-[1.7] text-[#72766F] break-keep">
-              성분과 제조 기준, 보호자의 사용 가치를 확인한 반려동물 브랜드와<br className="hidden sm:block" />
-              상품을 소개합니다.
-            </p>
-            <div className="mt-7 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <Link href="/shop" className="flex h-[48px] lg:h-[50px] items-center justify-center rounded-xl bg-[#18231F] px-8 text-[15px] font-bold text-white transition-colors hover:bg-[#2F3B34]">
-                검증 상품 보기
-              </Link>
-              <Link href="/concerns" className="flex h-[48px] lg:h-[50px] items-center justify-center rounded-xl border border-[#DED8CC] bg-white px-8 text-[15px] font-bold text-[#18231F] transition-colors hover:border-[#B99562]">
-                고민별 찾아보기
-              </Link>
-            </div>
-            <div className="mt-6 flex items-center gap-2 text-[13px] font-medium text-[#68716C]">
-              <ShieldCheck className="size-4 text-[#B99562]" strokeWidth={2} />
-              백조 Audit 검증을 통과한 브랜드만 소개합니다.
-            </div>
-          </div>
-          <div className="w-full lg:w-[53%] h-[300px] sm:h-[400px] lg:h-full relative overflow-hidden rounded-[24px]">
-            <img src="/images/poodle-pet-food.png" alt="백조오브제 펫 푸드와 푸들" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute right-5 top-5 inline-flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 shadow-sm backdrop-blur-sm">
-              <ShieldCheck className="size-4 text-[#2E7D32]" strokeWidth={2} />
-              <div className="flex flex-col">
-                <span className="text-[12px] font-bold leading-none text-[#18231F]">Audit Passed</span>
-                <span className="mt-0.5 text-[10px] text-[#68716C]">검증 기준 통과</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. 빠른 쇼핑 카테고리 */}
-      <section className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-14 mb-20 lg:mb-24">
-        <div className="rounded-[20px] bg-white border border-[#F2EFE9] p-6 lg:p-8 flex flex-col xl:flex-row xl:items-center gap-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-          <h3 className="text-[16px] font-bold text-[#18231F] shrink-0">빠른 쇼핑</h3>
-          <div className="grid grid-cols-4 gap-y-6 md:flex md:flex-wrap md:gap-x-8 xl:flex-1 xl:justify-between">
-            {quickLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link key={link.name} href={link.href} className="group flex flex-col items-center gap-3">
-                  <div className="flex size-[48px] items-center justify-center rounded-full bg-[#F9F8F5] text-[#18231F] transition-colors group-hover:bg-[#F2EFE9]">
-                    <Icon className="size-[20px]" strokeWidth={1.5} />
-                  </div>
-                  <span className="text-[13px] font-medium text-[#68716C] group-hover:text-[#18231F] whitespace-nowrap">{link.name}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Audit 추천 상품 */}
-      <section className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-14 mb-20 lg:mb-28">
-        <div className="flex items-end justify-between mb-8">
-          <h2 className="text-[24px] font-bold tracking-tight text-[#18231F] sm:text-[28px]">Audit를 통과한 오늘의 추천</h2>
-          <Link href="/shop" className="hidden sm:flex items-center text-[14px] font-semibold text-[#68716C] hover:text-[#B99562] transition-colors">
-            전체 셀렉션 보기 <ArrowRight className="ml-1 size-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 xl:grid-cols-4 xl:gap-6">
-          {bestProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-        <Link href="/shop" className="mt-8 flex w-full h-[48px] items-center justify-center rounded-xl border border-[#DED8CC] text-[14px] font-bold text-[#18231F] sm:hidden">
-          전체 셀렉션 보기
-        </Link>
-      </section>
-
-      {/* 4. 고민별 맞춤 큐레이션 */}
-      <section className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-14 mb-20 lg:mb-28">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-          <div>
-            <h2 className="text-[24px] font-bold tracking-tight text-[#18231F] sm:text-[28px]">반려동물 고민에 맞춘 큐레이션</h2>
-            <p className="mt-2 text-[15px] text-[#68716C]">우리 아이의 일상적인 고민부터 차근차근 확인해 보세요.</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/diagnosis" className="text-[14px] font-bold text-[#B99562] hover:text-[#A8742E] transition-colors">
-              1분 맞춤 진단 시작
-            </Link>
-            <Link href="/concerns" className="flex items-center text-[14px] font-semibold text-[#68716C] hover:text-[#18231F] transition-colors">
-              모든 고민 살펴보기 <ArrowRight className="ml-1 size-4" />
-            </Link>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {curationCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Link key={card.title} href={card.href} className="group relative h-[200px] overflow-hidden rounded-[20px] bg-black">
-                <img src={card.img} alt={card.title} className="absolute inset-0 h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 w-full p-5 flex flex-col">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icon className="size-[18px] text-white" strokeWidth={2} />
-                    <span className="text-[18px] font-bold text-white">{card.title}</span>
-                  </div>
-                  <span className="text-[13px] text-white/80">{card.desc}</span>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* 5. 백조 Audit 검증 기준 */}
-      <section className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-14 mb-20 lg:mb-28">
-        <div className="flex flex-col lg:flex-row overflow-hidden rounded-[24px] bg-white border border-[#F2EFE9] lg:h-[340px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-          <div className="flex flex-col justify-center bg-[#FAF9F5] p-8 md:p-10 lg:w-[34%]">
-            <span className="text-[12px] font-bold tracking-widest text-[#B99562] uppercase mb-3">백조 Audit</span>
-            <h2 className="break-keep text-[28px] md:text-[32px] font-bold leading-[1.25] tracking-tight text-[#18231F]">
-              100개 중<br />5개만 선택합니다.
-            </h2>
-            <p className="mt-4 break-keep text-[14px] leading-[1.65] text-[#68716C]">
-              성분, 원료, 제조·유통, 브랜드 운영 방향을 철저히 확인한 상품만 소개합니다.
-            </p>
-            <Link href="/landing/care-kit" className="mt-8 flex items-center text-[14px] font-bold text-[#18231F] hover:text-[#B99562] transition-colors">
-              검증 기준 자세히 보기 <ArrowRight className="ml-1 size-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-6 p-8 md:p-10 lg:w-[66%] lg:grid-cols-4 lg:items-center">
-            {[
-              { icon: Activity, title: '브랜드 운영 방향', desc: '가치와 철학을 함께 봅니다' },
-              { icon: Leaf, title: '성분·원료 정보', desc: '안전한 성분을 확인합니다' },
-              { icon: Monitor, title: '제조·유통 기준', desc: '과정을 세밀하게 검토합니다' },
-              { icon: Heart, title: '보호자 사용 가치', desc: '실제 사용 경험을 확인합니다' }
-            ].map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <div key={idx} className="flex flex-col items-start">
-                  <div className="mb-4 flex size-[48px] items-center justify-center rounded-full bg-[#F9F8F5] text-[#18231F]">
-                    <Icon className="size-[24px]" strokeWidth={1.5} />
-                  </div>
-                  <h4 className="text-[15px] font-bold text-[#18231F] mb-1">{item.title}</h4>
-                  <p className="text-[13px] leading-[1.5] text-[#68716C] break-keep">{item.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 6. 우리 아이를 위한 3가지 솔루션 */}
-      <section className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-12 mb-14 md:mb-16 lg:mb-18">
-        <h2 className="mb-8 text-[24px] font-bold tracking-tight text-[#18231F] sm:text-[28px]">우리 아이를 위한 3가지 솔루션</h2>
-        <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-3">
+    <main className="home-page min-h-screen bg-white">
+      
+      {/* ?�?�?� 1. Intro Stage ?�?�?� */}
+      <section className="home-intro pt-[32px] lg:pt-[48px]">
+        <div className="mx-auto w-full max-w-[1264px] px-[20px] md:px-[24px] lg:px-[32px]">
           
-          <Link href="/brands" className="group grid min-w-0 grid-cols-1 md:grid-cols-[minmax(0,62%)_minmax(0,38%)] overflow-hidden rounded-[20px] border border-[#E3DCCF] bg-[#FFFEFB] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-            {/* 모바일 뷰: 상단 이미지 */}
-            <div className="relative w-full aspect-[16/9] md:hidden overflow-hidden">
-               <Image src="/images/solutions/audit.png" alt="솔루션" fill sizes="(max-width: 767px) 100vw, 13vw" className="object-cover object-[48%_center] transition-transform duration-300 group-hover:scale-[1.02]" />
-            </div>
-            
-            <div className="flex min-w-0 flex-col p-[20px] md:p-[22px] lg:p-[26px] xl:p-[30px]">
-              <h3 className="text-[22px] md:text-[25px] font-bold leading-[1.28] tracking-[-0.025em] text-[#18231F] break-keep">검증 브랜드</h3>
-              <p className="mt-[12px] md:mt-[14px] text-[14px] md:text-[15px] leading-[1.65] text-[#68716C] break-keep line-clamp-2">
-                Audit 기준을 철저히 통과한 믿을 수 있는 브랜드와 상품
+          {/* Hero */}
+          <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,0.41fr)_minmax(0,0.59fr)] lg:items-center gap-[28px] lg:gap-[48px]">
+            <div className="flex w-full flex-col items-start">
+              <span className="block text-[11px] lg:text-[13px] font-bold tracking-[0.15em] text-[#B68B4E] uppercase mb-4 md:mb-5">{hero.eyebrow}</span>
+              <h1 className="text-[32px] md:text-[38px] lg:text-[48px] font-[700] leading-[1.18] tracking-[-0.035em] text-[#17231E] break-keep min-w-0">
+                {renderLines(hero.titleLines)}
+              </h1>
+              <p className="mt-[20px] lg:mt-[24px] max-w-[450px] text-[14px] md:text-[15px] leading-[1.7] text-[#6F746F] break-keep min-w-0">
+                {renderLines(hero.descriptionLines, 'hidden sm:block')}
               </p>
-              <div className="mt-auto pt-5 text-[14px] font-semibold text-[#18231F] flex items-center">
-                브랜드 보러가기 <ArrowRight className="ml-1 size-3 transition-transform group-hover:translate-x-1" />
+              <div className="mt-[26px] flex flex-col sm:flex-row gap-[10px] w-full sm:w-auto">
+                <Link href="/shop" className="flex h-[44px] lg:h-[46px] items-center justify-center rounded-[10px] lg:rounded-[12px] bg-[#173C32] px-[24px] gap-[10px] text-[14px] font-semibold text-white transition-colors hover:bg-[#2F3B34]">
+                  {hero.primaryCtaLabel}
+                </Link>
+                <Link href="/concerns" className="flex h-[44px] lg:h-[46px] items-center justify-center rounded-[10px] lg:rounded-[12px] border border-[#DCD8CF] bg-transparent px-[24px] gap-[10px] text-[14px] font-semibold text-[#26312C] transition-colors hover:border-[#173C32]">
+                  {hero.secondaryCtaLabel}
+                </Link>
+              </div>
+              <div className="mt-[16px] flex items-center gap-2 text-[13px] font-medium text-[#99978F]">
+                <ShieldCheck className="size-4 text-[#B99562]" strokeWidth={2} />
+                {hero.trustNote}
               </div>
             </div>
-            
-            {/* 데스크탑 뷰: 우측 이미지 */}
-            <div className="hidden md:block relative h-full min-h-[220px] w-full overflow-hidden">
-               <Image src="/images/solutions/audit.png" alt="솔루션" fill sizes="(max-width: 1023px) 100vw, 13vw" className="object-cover object-[48%_center] transition-transform duration-300 group-hover:scale-[1.02]" />
-            </div>
-          </Link>
-
-          <Link href="/diagnosis" className="group grid min-w-0 grid-cols-1 md:grid-cols-[minmax(0,62%)_minmax(0,38%)] overflow-hidden rounded-[20px] border border-[#E3DCCF] bg-[#FFFEFB] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-            <div className="relative w-full aspect-[16/9] md:hidden overflow-hidden">
-               <Image src="/images/solutions/curation.png" alt="솔루션" fill sizes="(max-width: 767px) 100vw, 13vw" className="object-cover object-[58%_center] transition-transform duration-300 group-hover:scale-[1.02]" />
-            </div>
-            
-            <div className="flex min-w-0 flex-col p-[20px] md:p-[22px] lg:p-[26px] xl:p-[30px]">
-              <h3 className="text-[22px] md:text-[25px] font-bold leading-[1.28] tracking-[-0.025em] text-[#18231F] break-keep">고민별 큐레이션</h3>
-              <p className="mt-[12px] md:mt-[14px] text-[14px] md:text-[15px] leading-[1.65] text-[#68716C] break-keep line-clamp-2">
-                우리 아이의 증상과 고민에 딱 맞는 상품 맞춤 추천
-              </p>
-              <div className="mt-auto pt-5 text-[14px] font-semibold text-[#18231F] flex items-center">
-                큐레이션 보러가기 <ArrowRight className="ml-1 size-3 transition-transform group-hover:translate-x-1" />
+            <div className="w-full h-[290px] lg:h-[380px] relative overflow-hidden rounded-[20px]">
+              <Image src="/images/poodle-pet-food.png" alt="백조?�브?????�드?� ?�들" fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover object-center" />
+              <div className="absolute right-5 top-5 inline-flex items-center gap-2 rounded-xl bg-white/50 border border-white/20 backdrop-blur-md px-3 py-2 shadow-sm">
+                <ShieldCheck className="size-4 text-[#2E7D32]" strokeWidth={2} />
+                <div className="flex flex-col">
+                  <span className="text-[12px] font-bold leading-none text-[#18231F]">{hero.badgeTitle}</span>
+                  <span className="mt-0.5 text-[10px] text-[#26312C]">{hero.badgeSubtitle}</span>
+                </div>
               </div>
             </div>
-            
-            <div className="hidden md:block relative h-full min-h-[220px] w-full overflow-hidden">
-               <Image src="/images/solutions/curation.png" alt="솔루션" fill sizes="(max-width: 1023px) 100vw, 13vw" className="object-cover object-[58%_center] transition-transform duration-300 group-hover:scale-[1.02]" />
-            </div>
-          </Link>
+          </div>
 
-          <Link href="/insurance" className="group grid min-w-0 grid-cols-1 md:grid-cols-[minmax(0,62%)_minmax(0,38%)] overflow-hidden rounded-[20px] border border-[#E3DCCF] bg-[#FFFEFB] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-            <div className="relative w-full aspect-[16/9] md:hidden overflow-hidden">
-               <Image src="/images/solutions/insurance.png" alt="솔루션" fill sizes="(max-width: 767px) 100vw, 13vw" className="object-cover object-[62%_center] transition-transform duration-300 group-hover:scale-[1.02]" />
-            </div>
-            
-            <div className="flex min-w-0 flex-col p-[20px] md:p-[22px] lg:p-[26px] xl:p-[30px]">
-              <h3 className="text-[22px] md:text-[25px] font-bold leading-[1.28] tracking-[-0.025em] text-[#18231F] break-keep">펫보험 비교</h3>
-              <p className="mt-[12px] md:mt-[14px] text-[14px] md:text-[15px] leading-[1.65] text-[#68716C] break-keep line-clamp-2">
-                복잡한 보장 조건을 우리 아이 맞춤으로 한눈에 비교
-              </p>
-              <div className="mt-auto pt-5 text-[14px] font-semibold text-[#18231F] flex items-center">
-                보험 분석 알아보기 <ArrowRight className="ml-1 size-3 transition-transform group-hover:translate-x-1" />
-              </div>
-            </div>
-            
-            <div className="hidden md:block relative h-full min-h-[220px] w-full overflow-hidden">
-               <Image src="/images/solutions/insurance.png" alt="솔루션" fill sizes="(max-width: 1023px) 100vw, 13vw" className="object-cover object-[62%_center] transition-transform duration-300 group-hover:scale-[1.02]" />
-            </div>
-          </Link>
-        </div>
-      </section>
-
-      {/* 7 & 8. 검증 브랜드 셀렉션 */}
-      <section className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-14 mb-20 lg:mb-28">
-        <BrandShowcaseSlider brands={displayBrands} productsByBrand={products.reduce((acc, p) => {
-          if (!acc[p.brandId]) acc[p.brandId] = [];
-          acc[p.brandId].push(p);
-          return acc;
-        }, {} as Record<string, Product[]>)} />
-      </section>
-
-      {/* 9. 펫보험 안내 배너 */}
-      <section className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-14 mb-20 lg:mb-28">
-        <div className="relative flex h-[260px] md:h-[240px] overflow-hidden rounded-[24px] bg-[#1A2F25] px-6 py-8 md:px-12 md:py-0 md:items-center">
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between w-full h-full md:h-auto">
-            <div className="flex flex-col items-start text-white max-w-[400px]">
-              <div className="flex items-center gap-2 mb-3">
-                <ShieldCheck className="size-5 text-[#B99562]" strokeWidth={2} />
-                <span className="text-[14px] font-semibold text-[#B99562]">펫보험 보장 확인</span>
-              </div>
-              <h2 className="text-[24px] md:text-[28px] font-bold leading-[1.3] tracking-tight">
-                보험도 우리 아이 기준으로.
+          {/* Audit */}
+          <div 
+            id="home-audit-title"
+            className="mt-[20px] lg:mt-[24px] flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_250px] xl:grid-cols-[minmax(0,1fr)_280px] gap-[24px] lg:gap-[24px] xl:gap-[28px] rounded-[18px] border border-[#E7E2D9] bg-[#F6F3ED] overflow-hidden h-auto lg:min-h-[190px]"
+          >
+            <div className="flex w-full flex-col justify-center min-w-0 p-[24px] lg:p-[26px_30px]">
+              <span className="text-[12px] font-[700] tracking-[0.08em] text-[#A48D67] uppercase">
+                {audit.badge}
+              </span>
+              
+              <h2 className="mt-[12px] font-bold tracking-tight text-[#17231E] text-[24px] md:text-[28px] lg:text-[32px] leading-[1.35] break-keep min-w-0">
+                <span className="block whitespace-nowrap">브랜?��? ?�택?�기 ?�에</span>
+                <span className="block whitespace-nowrap">?�리??먼�? 검증합?�다.</span>
               </h2>
-              <p className="mt-2 text-[14px] md:text-[15px] leading-[1.6] text-white/80 break-keep">
-                보험 상품을 우리 아이의 조건에 맞게 비교해 보세요. 가장 적합한 펫보험을 찾아보세요.
+              
+              <p className="mt-[12px] max-w-[520px] line-clamp-2 break-keep text-[14px] leading-[1.65] text-[#6E746F]">
+                {audit.description}
               </p>
+
+              <div className="mt-[18px] flex flex-wrap xl:flex-nowrap items-center gap-x-[14px] gap-y-[10px]">
+                <div className="flex items-center gap-[14px]">
+                  <div className="flex items-baseline gap-1.5">
+                     <span className="font-editorial text-[28px] leading-none text-[#17211D]">100</span>
+                     <span className="text-[13px] font-medium text-[#6E746F]">개의 브랜??�?/span>
+                  </div>
+                  <div className="h-[24px] w-[1px] bg-[#E7E2D9]"></div>
+                  <div className="flex items-baseline gap-1.5">
+                     <span className="font-editorial text-[28px] leading-none text-[#B68B4E]">5</span>
+                     <span className="text-[13px] font-medium text-[#6E746F]">개만 ?�택?�니??</span>
+                  </div>
+                </div>
+
+                <Link
+                  href="/audit"
+                  className="group inline-flex h-[40px] items-center justify-center rounded-full bg-[#173C32] px-[18px] text-[13px] font-bold text-white transition-colors hover:bg-[#2F3B34] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173C32] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F6F3ED]"
+                >
+                  {audit.linkLabel} <ArrowRight className="ml-2 size-4 transition-transform duration-300 group-hover:translate-x-[3px]" />
+                </Link>
+              </div>
             </div>
-            
-            <div className="mt-auto md:mt-0 relative z-20 shrink-0">
-              <Link href="/insurance" className="flex h-[48px] items-center justify-center rounded-xl bg-white/10 border border-white/20 px-8 text-[14px] font-bold text-white transition-colors hover:bg-white hover:text-[#18231F] backdrop-blur-sm">
-                보험 분석 알아보기
-              </Link>
+
+            <div className="w-full flex items-center justify-center p-[24px] pt-0 lg:p-0 lg:pr-[30px]">
+              <div className="relative w-full max-w-[300px] lg:w-[250px] xl:w-[280px] h-[130px] rounded-[14px] overflow-hidden">
+                <Image 
+                  src="/images/baekjo-audit-logo.png" 
+                  alt="백조 ?�브??고양?��? �?브랜??로고" 
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 280px"
+                  className="object-cover saturate-[0.82] brightness-[1.04]"
+                />
+              </div>
             </div>
-          </div>
-          <div className="absolute bottom-0 right-0 h-[85%] md:h-[120%] w-[50%] md:w-[45%] opacity-90 mix-blend-luminosity">
-            <img src="/images/care_guide_hero.png" alt="강아지와 고양이" className="h-full w-full object-cover object-left-top scale-x-[-1]" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1A2F25] to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1A2F25] to-transparent md:hidden"></div>
           </div>
         </div>
       </section>
 
-      {/* 10. 반려가족 후기와 백조 소식 */}
-      <section className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-14">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
-          <div className="w-full lg:w-[58%]">
-            <div className="flex items-end justify-between mb-8 border-b border-[#DED8CC] pb-4">
-              <h2 className="text-[20px] font-bold tracking-tight text-[#18231F]">반려가족 후기</h2>
-              <Link href="/reviews" className="flex items-center text-[13px] font-bold text-[#68716C] hover:text-[#B99562] transition-colors">
-                더 보기 <ArrowRight className="ml-1 size-3" />
+      {/* ?�?�?� 2. Discovery Commerce Stage ?�?�?� */}
+      <section className="home-discovery mt-[56px] lg:mt-[72px]">
+        <div className="mx-auto w-full max-w-[1264px] px-[20px] md:px-[24px] lg:px-[32px]">
+          
+          <div className="w-full">
+            
+            {/* Quick Nav */}
+            <div className="mb-[28px] flex min-h-[60px] h-auto flex-col bg-transparent py-2 lg:flex-row lg:items-center lg:justify-between lg:py-0">
+              <div className="flex shrink-0 items-center pb-4 lg:w-[140px] lg:pb-0 lg:pr-8 lg:border-r lg:border-[#E7E2D9]/70 border-b border-[#E7E2D9]/70 lg:border-b-0">
+                <h2 className="text-[16px] font-bold tracking-tight text-[#17211D] md:text-[17px]">빠른 ?�핑</h2>
+              </div>
+              <div className="hide-scrollbar flex w-full flex-1 items-center justify-between overflow-x-auto overscroll-x-contain pt-4 lg:pl-6 lg:pt-0 gap-[16px] lg:gap-0">
+                {quickLinks.map((link, i) => {
+                  const Icon = link.icon;
+                  const name = quickShop.links[i]?.name ?? '';
+                  return (
+                    <Link 
+                      key={link.href} 
+                      href={link.href} 
+                      className="group shrink-0 flex flex-col items-center justify-center gap-[8px] min-w-[56px] lg:min-w-0 p-1 rounded-[12px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173C32]"
+                    >
+                      <div className="flex size-[48px] items-center justify-center rounded-[12px] bg-transparent text-[#17211D] transition-colors group-hover:bg-[#E8EFEA] group-focus-visible:bg-[#E8EFEA] md:size-[52px] lg:size-[44px]">
+                        <Icon className="size-[18px] lg:size-[20px]" strokeWidth={1.5} />
+                      </div>
+                      <span className="whitespace-nowrap text-[12px] lg:text-[13px] font-medium tracking-tight text-[#6E746F] group-hover:text-[#173C32] group-focus-visible:text-[#173C32]">{name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Curation */}
+            <div className="mb-[24px] flex flex-col lg:flex-row lg:items-end lg:justify-between gap-[20px] lg:gap-[32px]">
+              <div>
+                <h2 className="text-[22px] md:text-[24px] lg:text-[29px] font-bold tracking-tight text-[#17211D] leading-[1.35] truncate min-w-0">
+                  {curation.title.replace(/<br\s*\/?>/gi, ' ')}
+                </h2>
+                <p className="mt-[7px] text-[14px] text-[#68706B] leading-[1.6] max-w-[650px] truncate min-w-0">
+                  {curation.description}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-[10px] shrink-0">
+                <Link href="/diagnosis" className="flex h-[40px] items-center justify-center rounded-lg bg-[#E8EFEA] px-4 md:px-5 text-[13px] md:text-[14px] font-bold text-[#173C32] transition-colors hover:bg-[#D1E0D6]">
+                  {curation.diagnosisLinkLabel}
+                </Link>
+                <Link href="/concerns" className="group flex h-[40px] items-center justify-center rounded-lg border border-[#E8E3DA] bg-white px-4 md:px-5 text-[13px] md:text-[14px] font-bold text-[#68706B] transition-colors hover:border-[#173C32] hover:text-[#173C32]">
+                  {curation.allConcernsLinkLabel} <ArrowRight className="ml-1 size-4 transition-transform duration-300 group-hover:translate-x-[4px]" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-[16px]">
+              {curationCards.map((card, i) => {
+                const title = curation.cards[i]?.title ?? '';
+                const desc = curation.cards[i]?.desc ?? '';
+                return (
+                  <Link
+                    key={card.href}
+                    href={card.href}
+                    className="group relative flex min-w-0 flex-col overflow-hidden rounded-[16px] bg-white h-[210px] lg:h-[228px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173C32]"
+                  >
+                    <div className="absolute inset-0 h-full w-full overflow-hidden bg-black z-0">
+                      <Image
+                        src={card.img}
+                        alt={title}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    </div>
+                    {/* Base weak overlay */}
+                    <div className="absolute inset-0 bg-black/[0.08] pointer-events-none z-10" />
+                    {/* Bottom gradient overlay */}
+                    <div className="absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-black/60 via-black/25 to-transparent pointer-events-none z-10" />
+                    
+                    <div className="relative z-20 flex flex-col justify-end p-[18px] h-full break-keep">
+                      <div className="mb-1 flex items-center gap-2">
+                         <span className="text-[18px] lg:text-[19px] font-bold text-white">{title}</span>
+                      </div>
+                      <span className="text-[12px] lg:text-[13px] font-medium leading-[1.55] text-[#F5F1E9] line-clamp-2">{renderTextWithBr(desc)}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Product Recommendation */}
+            <div className="mt-[40px] border-t border-[#E7E2D9] pt-[36px] lg:mt-[48px] lg:pt-[40px]">
+              <div className="flex items-end justify-between mb-[24px]">
+                <h2 className="text-[22px] md:text-[24px] lg:text-[29px] font-bold tracking-tight text-[#17211D] leading-[1.35] truncate min-w-0">{bestProductsCopy.title}</h2>
+                <Link href="/shop" className="group hidden sm:flex items-center text-[13px] font-bold text-[#68706B] transition-colors hover:text-[#173C32] focus-visible:outline-none focus-visible:underline">
+                  {bestProductsCopy.linkLabel} <ArrowRight className="ml-1 size-4 transition-transform duration-300 group-hover:translate-x-[4px]" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:gap-5">
+                {bestProducts.map((product) => (
+                  <div key={product.id} className="min-w-0">
+                    <ProductCard product={product} variant="home" />
+                  </div>
+                ))}
+              </div>
+              <Link href="/shop" className="mt-8 flex w-full h-[48px] items-center justify-center rounded-xl border border-[#DED8CC] text-[14px] font-bold text-[#18231F] sm:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173C32]">
+                {bestProductsCopy.linkLabel}
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {reviews.slice(0, 2).map((review) => (
-                <ReviewCard
-                  key={review.id}
-                  review={review}
-                  productName={products.find((p) => p.id === review.productId)?.name}
-                />
-              ))}
+            
+          </div>
+        </div>
+      </section>
+
+      {/* ?�?�?� 3. Brand Trust Stage ?�?�?� */}
+      <section className="home-trust mt-[64px] bg-white py-[56px] lg:mt-[80px] lg:py-[80px]">
+        <div className="mx-auto w-full max-w-[1264px] px-[20px] md:px-[24px] lg:px-[32px]">
+          
+          <BrandShowcaseSlider brands={displayBrands} />
+
+          {/* Insurance Banner */}
+          <div className="mt-[52px] lg:mt-[64px] grid min-h-[250px] lg:min-h-[270px] overflow-hidden rounded-[20px] bg-white border border-[#E7E2D9]/70 shadow-none lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)]">
+            <div className="flex flex-col justify-center p-[20px] md:p-[24px] lg:p-[38px] min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldCheck className="size-4 text-[#173C32]" strokeWidth={2} />
+                <span className="text-[12px] md:text-[13px] font-semibold text-[#173C32]">{insuranceBanner.eyebrow}</span>
+              </div>
+              <h2 className="text-[22px] md:text-[24px] lg:text-[28px] font-bold leading-[1.3] tracking-tight text-[#17211D] break-keep min-w-0">
+                {insuranceBanner.title}
+              </h2>
+              <p className="mt-2 text-[13px] lg:text-[14px] leading-[1.6] text-[#68706B] break-keep min-w-0 max-w-[420px]">
+                {insuranceBanner.description}
+              </p>
+              <div className="mt-5">
+                <Link href="/insurance" className="inline-flex h-[42px] items-center justify-center rounded-xl bg-[#173C32] px-6 text-[13px] font-bold text-white transition-colors hover:bg-[#214D41]">
+                  {insuranceBanner.buttonLabel}
+                </Link>
+              </div>
+            </div>
+            <div className="relative min-h-[210px] lg:min-h-0">
+              <Image src="/images/care_guide_hero.png" alt="강아지?� 고양?? fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover object-center scale-x-[-1]" />
             </div>
           </div>
-          <div className="w-full lg:w-[42%]">
-            <div className="flex items-end justify-between mb-8 border-b border-[#DED8CC] pb-4">
-              <h2 className="text-[20px] font-bold tracking-tight text-[#18231F]">백조 소식</h2>
-              <Link href="/notices" className="flex items-center text-[13px] font-bold text-[#68716C] hover:text-[#B99562] transition-colors">
-                더 보기 <ArrowRight className="ml-1 size-3" />
-              </Link>
+
+          {/* Review and Notice Editorial Layout */}
+          <div className="mt-[52px] lg:mt-[64px] grid grid-cols-1 gap-[40px] lg:grid-cols-[minmax(0,0.64fr)_minmax(0,0.36fr)] lg:gap-[40px]">
+            
+            {/* Review Section */}
+            <div>
+              <div className="flex items-end justify-between mb-[22px] lg:mb-[24px]">
+                <h2 className="text-[22px] md:text-[24px] lg:text-[29px] font-bold tracking-tight text-[#17211D] leading-[1.35] truncate min-w-0">{trustBoard.reviewsTitle}</h2>
+                <Link href="/reviews" className="group flex items-center text-[13px] font-bold text-[#68706B] transition-colors hover:text-[#173C32]">
+                  {trustBoard.reviewsLinkLabel} <ArrowRight className="ml-1 size-4 transition-transform duration-300 group-hover:translate-x-[4px]" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 gap-[24px] md:grid-cols-2">
+                {reviews.slice(0, 2).map(review => (
+                  <div key={review.id} className="border-t border-[#DED8CE] py-[22px] bg-transparent">
+                    <ReviewCard
+                      review={review}
+                      productName={products.find((p) => p.id === review.productId)?.name}
+                      variant="home"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-col">
-              {recentNotices.map((notice) => (
-                <Link key={notice.id} href={`/notices/${notice.id}`} className="group flex flex-col gap-2 border-b border-[#F2EFE9] py-5 transition-colors hover:bg-white/50 first:pt-0">
-                  <div className="flex items-center justify-between">
-                    <p className="line-clamp-1 break-keep text-[15px] font-medium text-[#18231F] group-hover:text-[#B99562] transition-colors">
+
+            {/* Notice Section */}
+            <div>
+              <div className="flex items-end justify-between mb-[22px] lg:mb-[24px]">
+                <h2 className="text-[22px] md:text-[24px] lg:text-[29px] font-bold tracking-tight text-[#17211D] leading-[1.35] truncate min-w-0">{trustBoard.noticesTitle}</h2>
+                <Link href="/notices" className="group flex items-center text-[13px] font-bold text-[#68706B] transition-colors hover:text-[#173C32]">
+                  {trustBoard.noticesLinkLabel} <ArrowRight className="ml-1 size-4 transition-transform duration-300 group-hover:translate-x-[4px]" />
+                </Link>
+              </div>
+              <div className="border-t border-[#DED8CE]">
+                {recentNotices.map((notice) => (
+                  <Link key={notice.id} href={`/notices/${notice.id}`} className="group flex items-center justify-between gap-4 border-b border-[#E7E2D9] min-h-[56px] md:min-h-[64px] py-[16px] md:py-[18px] transition-colors hover:bg-black/5 min-w-0">
+                    <p className="min-w-0 break-keep pr-4 text-[14px] font-medium text-[#17211D] transition-colors group-hover:text-[#173C32] truncate">
                       {notice.title}
                     </p>
-                    <time className="shrink-0 font-editorial text-[13px] italic text-[#68716C]">
+                    <time className="shrink-0 font-editorial text-[12px] italic text-[#68706B]">
                       {formatDate(notice.date)}
                     </time>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
             </div>
+
           </div>
+
         </div>
       </section>
+
     </main>
   );
 }
