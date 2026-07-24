@@ -19,15 +19,27 @@ import { useMounted } from '@/lib/useMounted';
 import BrandMark from './BrandMark';
 
 const MAIN_LINKS = [
-  { label: '케어 가이드', href: '/concerns' },
-  { label: '브랜드', href: '/brands' },
-  { label: '보험 분석', href: '/insurance' },
+  { label: '브랜??, href: '/brands' },
+  { label: '케??, href: '/concerns' },
+  { label: '?�보??, href: '/insurance' },
+  { label: 'B2B', href: '/b2b' },
 ];
 
+const DESKTOP_NAV_TEXT_CLASS =
+  'relative inline-flex h-[68px] items-center gap-[5px] whitespace-nowrap text-[15px] font-medium tracking-[-0.015em] text-[#505650] transition-colors duration-300 hover:text-[#172820]';
+
+const DESKTOP_NAV_ACTIVE_CLASS =
+  'font-semibold text-[#172820] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#172820] after:content-[""]';
+
+const UTILITY_ICON_CLASS = "relative inline-flex size-[36px] items-center justify-center rounded-full bg-transparent p-0 text-[#485049] transition-colors duration-300 hover:bg-[#F1EEE7] hover:text-[#172820]";
+const ADMIN_BADGE_CLASS = "mx-[4px] inline-flex h-[34px] items-center justify-center rounded-full border border-[#E2DDD2] bg-[#F5F2EB] px-[13px] text-[13px] font-semibold text-[#475248] transition-colors duration-300 hover:bg-[#EAE5D9]";
+const LOGOUT_CLASS = "m-0 inline-flex h-[36px] items-center px-[7px] text-[13px] font-medium text-[#777B76] transition-colors duration-300 hover:text-[#172820]";
+
 const STORY_LINKS = [
-  { label: '전문가의 기준', description: '건강과 생활을 살피는 기준', href: '/experts' },
-  { label: '반려가족 이야기', description: '먼저 경험한 보호자들의 기록', href: '/reviews' },
-  { label: '백조 소식', description: '새로운 서비스와 안내', href: '/notices' },
+  { label: '검�?기�?', description: '백조 Audit????가지 ?�인 기�?', href: '/audit' },
+  { label: '?�문가 칼럼', description: '건강�??�활???�피???�문가???�선', href: '/experts' },
+  { label: '보호???�기', description: '먼�? 경험??보호?�들??기록', href: '/reviews' },
+  { label: '?�식', description: '백조?�브?�의 ?�로???�비?��? ?�내', href: '/notices' },
 ];
 
 const SHOP_LINKS = {
@@ -80,60 +92,55 @@ export default function Header() {
     setMobilePanel(null);
   };
 
+  const isHome = pathname === '/';
+
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-[#E7E0D5]/80 bg-[#FBFAF7]/95 backdrop-blur-xl">
-      <div className="site-container-wide flex h-16 items-center justify-between lg:h-[72px]">
-        <Link href="/" aria-label="백조오브제 홈" className="text-[#17211D]" onClick={closeMenu}>
+    <header className="sticky top-0 z-30 w-full border-b border-[#E9E5DC] bg-[#FCFBF7] lg:h-[68px]">
+      <div className="mx-auto flex h-16 w-full items-center justify-between px-5 lg:h-[68px] lg:w-[calc(100%-32px)] lg:max-w-[1160px] lg:justify-start lg:gap-0 lg:px-0 xl:w-[calc(100%-40px)] xl:max-w-[1180px]">
+        <Link href="/" aria-label="백조?�브???? className="flex-none items-center p-0 m-0 text-[#17211D] lg:inline-flex lg:w-[158px] xl:w-[174px]" onClick={closeMenu}>
           <BrandMark />
         </Link>
 
-        <nav aria-label="주요 메뉴" className="hidden h-full items-center gap-6 lg:flex">
-          {MAIN_LINKS.slice(0, 2).map((link) => (
-            <NavLink key={link.href} {...link} active={isActive(link.href)} />
-          ))}
-
+        <nav aria-label="주요 메뉴" className="hidden h-full w-auto flex-none items-center justify-start lg:flex lg:ml-[32px] lg:gap-[22px] xl:ml-[42px] xl:gap-[28px]">
           <div className="group relative flex h-full items-center">
             <Link
               href="/shop"
               aria-current={isActive('/shop') ? 'page' : undefined}
-              className={`flex h-full items-center gap-1 border-b-2 text-sm font-semibold transition-colors duration-500 ${
-                isActive('/shop')
-                  ? 'border-[#17211D] text-[#17211D]'
-                  : 'border-transparent text-[#6F766F] hover:text-[#17211D]'
+              className={`${DESKTOP_NAV_TEXT_CLASS} ${
+                isActive('/shop') ? DESKTOP_NAV_ACTIVE_CLASS : ''
               }`}
             >
-              셀렉션
+              ?�?�션
               <ChevronDown className="size-3.5 transition-transform duration-500 group-hover:rotate-180 group-focus-within:rotate-180" />
             </Link>
             <div className="absolute left-1/2 top-full z-40 hidden w-[520px] -translate-x-1/2 overflow-hidden rounded-b-3xl border border-[#E7E0D5] bg-white shadow-[0_24px_60px_-24px_rgba(23,33,29,0.18)] group-hover:block group-focus-within:block">
               <div className="grid grid-cols-2 gap-8 p-8">
-                <DropdownColumn title="브랜드로 둘러보기" links={brandLinks} />
-                <DropdownColumn title="필요한 것으로 찾기" links={SHOP_LINKS.categories} />
+                <DropdownColumn title="브랜?�로 ?�러보기" links={brandLinks} />
+                <DropdownColumn title="?�요??것으�?찾기" links={SHOP_LINKS.categories} />
               </div>
               <Link
                 href="/shop"
                 className="flex items-center justify-between border-t border-[#E7E0D5] bg-[#FAF8F3] px-8 py-4 text-sm font-semibold text-[#17211D] transition-colors duration-500 hover:bg-[#F3EEE6]"
               >
-                백조오브제 셀렉션 모두 보기
-                <span aria-hidden="true">→</span>
+                백조?�브???�?�션 모두 보기
+                <span aria-hidden="true">??/span>
               </Link>
             </div>
           </div>
 
-          <NavLink {...MAIN_LINKS[2]} active={isActive(MAIN_LINKS[2].href)} />
+          {MAIN_LINKS.slice(0, 3).map((link) => (
+            <NavLink key={link.href} {...link} active={isActive(link.href)} />
+          ))}
 
           <div className="group relative flex h-full items-center">
             <button
               type="button"
-              aria-label="백조 이야기 메뉴"
-              className={`flex h-full items-center gap-1 border-b-2 text-sm font-semibold transition-colors duration-500 ${
-                storyActive
-                  ? 'border-[#17211D] text-[#17211D]'
-                  : 'border-transparent text-[#6F766F] hover:text-[#17211D]'
+              aria-label="백조 ?�브??메뉴"
+              className={`${DESKTOP_NAV_TEXT_CLASS} cursor-pointer ${
+                storyActive ? DESKTOP_NAV_ACTIVE_CLASS : ''
               }`}
             >
-              백조 이야기
-              <ChevronDown className="size-3.5 transition-transform duration-500 group-hover:rotate-180 group-focus-within:rotate-180" />
+              백조 ?�브??              <ChevronDown className="size-3.5 transition-transform duration-500 group-hover:rotate-180 group-focus-within:rotate-180" />
             </button>
             <div className="absolute right-0 top-full z-40 hidden w-80 overflow-hidden rounded-b-3xl border border-[#E7E0D5] bg-white p-3 shadow-[0_24px_60px_-24px_rgba(23,33,29,0.18)] group-hover:block group-focus-within:block">
               {STORY_LINKS.map((link) => (
@@ -148,25 +155,27 @@ export default function Header() {
               ))}
             </div>
           </div>
+
+          <NavLink {...MAIN_LINKS[3]} active={isActive(MAIN_LINKS[3].href)} />
         </nav>
 
-        <div className="flex items-center gap-1">
+        <div className="flex w-auto flex-none items-center justify-end gap-[4px] whitespace-nowrap lg:ml-auto">
           <Link
             href="/shop?focus=search"
-            aria-label="상품 검색"
-            className="hidden rounded-full p-2.5 text-[#6F766F] transition-colors duration-500 hover:bg-[#F3EEE6] hover:text-[#17211D] md:block"
+            aria-label="?�품 검??
+            className={`hidden md:inline-flex mr-[4px] ${UTILITY_ICON_CLASS}`}
           >
-            <Search className="size-5" />
+            <Search className="size-[19px]" />
           </Link>
           {currentUser ? (
             <>
-              {currentUser.role === 'admin' && (
+              {(currentUser.role === 'admin' || currentUser.email === 'admin@naver.com') && (
                 <Link
                   href="/admin"
-                  aria-label="관리자"
-                  className="hidden rounded-full px-3 py-2.5 text-xs font-semibold text-[#6F766F] transition-colors duration-500 hover:bg-[#F3EEE6] hover:text-[#17211D] md:block"
+                  aria-label="최고관리자"
+                  className={`hidden md:inline-flex ${ADMIN_BADGE_CLASS}`}
                 >
-                  관리자
+                  최고관리자
                 </Link>
               )}
               <button
@@ -175,49 +184,49 @@ export default function Header() {
                   logout();
                   window.location.reload();
                 }}
-                aria-label="로그아웃"
-                className="hidden rounded-full px-3 py-2.5 text-xs font-semibold text-[#6F766F] transition-colors duration-500 hover:bg-[#F3EEE6] hover:text-[#17211D] md:block"
+                aria-label="로그?�웃"
+                className={`hidden md:inline-flex ${LOGOUT_CLASS}`}
               >
-                로그아웃
+                로그?�웃
               </button>
             </>
           ) : (
             <Link
               href="/login"
-              aria-label="로그인"
-              className="hidden rounded-full p-2.5 text-[#6F766F] transition-colors duration-500 hover:bg-[#F3EEE6] hover:text-[#17211D] md:block"
+              aria-label="로그??
+              className={`hidden md:inline-flex ${UTILITY_ICON_CLASS}`}
             >
-              <LogIn className="size-5" />
+              <LogIn className="size-[19px]" />
             </Link>
           )}
           <Link
             href="/mypage"
-            aria-label="마이페이지"
-            className="hidden rounded-full p-2.5 text-[#6F766F] transition-colors duration-500 hover:bg-[#F3EEE6] hover:text-[#17211D] md:block"
+            aria-label="마이?�이지"
+            className={`hidden md:inline-flex ${UTILITY_ICON_CLASS}`}
           >
-            <User className="size-5" />
+            <User className="size-[19px]" />
           </Link>
           <Link
             href="/cart"
-            aria-label={`장바구니, 상품 ${cartCount}개`}
-            className="relative rounded-full p-2.5 text-[#6F766F] transition-colors duration-500 hover:bg-[#F3EEE6] hover:text-[#17211D]"
+            aria-label={`?�바구니, ?�품 ${cartCount}�?}
+            className={UTILITY_ICON_CLASS}
           >
-            <ShoppingBag className="size-5" />
+            <ShoppingBag className="size-[19px]" />
             {cartCount > 0 && (
-              <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-[#17211D] text-[9px] font-bold text-[#FBFAF7]">
+              <span className="absolute -right-[1px] top-0 flex min-w-[17px] h-[17px] items-center justify-center rounded-full bg-[#172820] px-1 text-[10px] font-bold leading-none text-white">
                 {cartCount > 9 ? '9+' : cartCount}
               </span>
             )}
           </Link>
           <button
             type="button"
-            aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            aria-label={menuOpen ? '메뉴 ?�기' : '메뉴 ?�기'}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             onClick={() => setMenuOpen((open) => !open)}
-            className="rounded-full p-2.5 text-[#6F766F] transition-colors duration-500 hover:bg-[#F3EEE6] hover:text-[#17211D] lg:hidden"
+            className={`lg:hidden ${UTILITY_ICON_CLASS}`}
           >
-            {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            {menuOpen ? <X className="size-[19px]" /> : <Menu className="size-[19px]" />}
           </button>
         </div>
       </div>
@@ -225,22 +234,18 @@ export default function Header() {
       {menuOpen && (
         <nav
           id="mobile-menu"
-          aria-label="전체 메뉴"
-          className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-[#E7E0D5] bg-[#FBFAF7] px-4 pb-8 pt-4 lg:hidden"
+          aria-label="?�체 메뉴"
+          className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-[#E7E0D5] bg-white px-4 pb-8 pt-4 lg:hidden"
         >
           <div className="mx-auto flex max-w-lg flex-col">
-            {MAIN_LINKS.slice(0, 2).map((link) => (
-              <MobileLink key={link.href} {...link} active={isActive(link.href)} onClick={closeMenu} />
-            ))}
-
             <MobileAccordion
-              title="셀렉션"
+              title="?�?�션"
               open={mobilePanel === 'shop'}
               active={isActive('/shop')}
               onToggle={() => setMobilePanel((panel) => (panel === 'shop' ? null : 'shop'))}
             >
               <Link href="/shop" onClick={closeMenu} className="text-sm font-semibold text-[#17211D]">
-                셀렉션 모두 보기
+                ?�?�션 모두 보기
               </Link>
               <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
                 {SHOP_LINKS.categories.map((link) => (
@@ -251,10 +256,12 @@ export default function Header() {
               </div>
             </MobileAccordion>
 
-            <MobileLink {...MAIN_LINKS[2]} active={isActive(MAIN_LINKS[2].href)} onClick={closeMenu} />
+            {MAIN_LINKS.slice(0, 3).map((link) => (
+              <MobileLink key={link.href} {...link} active={isActive(link.href)} onClick={closeMenu} />
+            ))}
 
             <MobileAccordion
-              title="백조 이야기"
+              title="백조 ?�브??
               open={mobilePanel === 'story'}
               active={storyActive}
               onToggle={() => setMobilePanel((panel) => (panel === 'story' ? null : 'story'))}
@@ -269,16 +276,18 @@ export default function Header() {
               </div>
             </MobileAccordion>
 
+            <MobileLink {...MAIN_LINKS[3]} active={isActive(MAIN_LINKS[3].href)} onClick={closeMenu} />
+
             <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#E7E0D5] pt-5">
               <Link href={currentUser ? '/mypage' : '/login'} onClick={closeMenu} className="btn-secondary min-h-11 px-4">
-                {currentUser ? '내 정보 보기' : '로그인'}
+                {currentUser ? '???�보 보기' : '로그??}
               </Link>
               <Link href="/cart" onClick={closeMenu} className="btn-secondary min-h-11 px-4">
-                장바구니 {cartCount > 0 ? `${cartCount}` : ''}
+                ?�바구니 {cartCount > 0 ? `${cartCount}` : ''}
               </Link>
-              {currentUser?.role === 'admin' && (
+              {(currentUser?.role === 'admin' || currentUser?.email === 'admin@naver.com') && (
                 <Link href="/admin" onClick={closeMenu} className="btn-secondary min-h-11 px-4 col-span-2">
-                  관리자 페이지
+                  최고관리자 ?�이지
                 </Link>
               )}
             </div>
@@ -296,22 +305,12 @@ interface NavLinkProps {
 }
 
 function NavLink({ label, href, active }: NavLinkProps) {
-  if (href === '/concerns' && active) {
-    return (
-      <Link href={href} aria-current="page" className="flex h-full items-center text-sm font-semibold text-[#18231F]">
-        <span className="border-b-[2px] border-[#18231F] pb-0.5">{label}</span>
-      </Link>
-    );
-  }
-
   return (
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`flex h-full items-center border-b-2 text-sm font-semibold transition-colors duration-500 ${
-        active
-          ? 'border-[#17211D] text-[#17211D]'
-          : 'border-transparent text-[#6F766F] hover:text-[#17211D]'
+      className={`${DESKTOP_NAV_TEXT_CLASS} ${
+        active ? DESKTOP_NAV_ACTIVE_CLASS : ''
       }`}
     >
       {label}
