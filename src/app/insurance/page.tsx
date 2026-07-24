@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   CheckCircle2,
@@ -15,7 +15,8 @@ import {
   Check,
   X
 } from 'lucide-react';
-import { saveInsuranceApplication } from '@/lib/storage';
+import { getInsuranceContentConfig } from '@/lib/storage';
+import { defaultInsuranceContentConfig, type ConsentDoc } from '@/lib/insuranceContent/config';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -66,23 +67,63 @@ const coverageOptions = [
   '가성비 중심',
 ];
 
-const faqs = [
-  {
-    q: '어떤 보험 증권을 제출해야 하나요?',
-    a: '현재 가입되어 있는 반려동물 보험의 보장 내용이 포함된 증권(PDF 또는 사진)을 올려주시면 됩니다. 전체 내용이 보이지 않아도 가입된 상품명과 기본 보장 내역만 확인 가능하면 분석이 가능합니다.',
-  },
-  {
-    q: '분석까지 얼마나 걸리나요?',
-    a: '평일 기준 접수 후 1~2일 내에 분석 결과를 안내해 드리고 있습니다. 주말이나 공휴일에 신청해주신 경우 다음 영업일로부터 순차적으로 안내해 드립니다.',
-  },
-  {
-    q: '분석 결과는 어떻게 확인하나요?',
-    a: '입력해주신 연락처(카카오톡 또는 문자)로 분석 결과 링크를 보내드립니다. 백조오브제 마이페이지에서도 언제든 다시 확인하실 수 있습니다.',
-  },
-];
-
 export default function InsurancePage() {
   const router = useRouter();
+
+  // 동의 전문·FAQ 는 관리자(/admin/insurance-content)가 편집하는 DB 콘텐츠 — 콘센트로 읽는다(§4).
+  // getInsuranceContentConfig 는 실패·미저장 시 defaultInsuranceContentConfig 로 폴백하므로 절대 깨지지 않는다.
+  const [content, setContent] = useState(defaultInsuranceContentConfig);
+  const [consentChecks, setConsentChecks] = useState<Record<string, boolean>>({});
+  const [openConsent, setOpenConsent] = useState<ConsentDoc | null>(null);
+  const [openFaqId, setOpenFaqId] = useState<string | null>(null);
+  const consentCloseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const consentDialogRef = useRef<HTMLDivElement | null>(null);
+
+  // 전문 모달 접근성 — Escape 로 닫고, 열릴 때 닫기 버튼으로 포커스를 옮기며, Tab 은 모달 안에서만
+  // 순환(focus trap)하고, 닫힐 때 열기 전 포커스(전문 보기 버튼)로 복원한다.
+  useEffect(() => {
+    if (!openConsent) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    consentCloseButtonRef.current?.focus();
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenConsent(null);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const dialog = consentDialogRef.current;
+      if (!dialog) return;
+      const focusables = Array.from(
+        dialog.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !dialog.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeydown);
+    return () => {
+      window.removeEventListener('keydown', handleKeydown);
+      previouslyFocused?.focus();
+    };
+  }, [openConsent]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getInsuranceContentConfig().then((config) => {
+      if (!cancelled) setContent(config);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Upload State
   const [isDragging, setIsDragging] = useState(false);
@@ -139,9 +180,10 @@ export default function InsurancePage() {
     companyName: '',
     productName: '',
     message: '',
-    privacyAgree: false,
-    thirdPartyAgree: false,
   });
+
+  // 필수 동의 문서가 전부 체크됐는지 — 동의 목록은 관리자가 바꿀 수 있으므로 id 기반으로 판정한다.
+  const allRequiredChecked = content.consents.filter((c) => c.required).every((c) => consentChecks[c.id]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = event.target;
@@ -149,42 +191,29 @@ export default function InsurancePage() {
     setFormData((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async (event: React.FormEvent) => {
+  // 랜딩은 접수를 완결하지 않는다 — 여기서 모은 값(보험사·상품명·궁금한 점)은 실제 신청서
+  // (/insurance/apply, 이름·연락처·반려동물 정보까지 받는 진짜 폼)로 프리필해 넘기고, 실제
+  // 저장은 그 페이지의 saveInsuranceApplication 호출 한 곳에서만 일어난다. 예전엔 이 랜딩이
+  // 직접 saveInsuranceApplication을 호출했는데, 이 폼엔 이름/연락처/반려동물 입력란이 아예
+  // 없어 그 값들을 전부 고정 문자열('사용자' 등)로 채워 보냈다 — 관리자가 연락할 수 없는
+  // 유령 신청 레코드가 쌓였다. 증권 업로드도 이 페이지엔 저장 경로가 없어(파일이 그대로
+  // 버려짐) 실제 첨부·접수는 다음 단계(신청서)에서 진행한다.
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!formData.privacyAgree || !formData.thirdPartyAgree || submitting) return;
+    if (!allRequiredChecked) return;
 
-    setSubmitting(true);
-    try {
-      await saveInsuranceApplication({
-        name: '사용자', // mock
-        phone: '010-0000-0000', // mock
-        petName: '반려동물', // mock
-        petType: '강아지', // mock
-        breed: '', // mock
-        petBreed: '', // mock
-        petAge: 0, // mock
-        coverageNeeds: [], // mock
-        message: formData.message,
-        concerns: formData.message,
-        privacyAgree: formData.privacyAgree,
-        thirdPartyAgree: formData.thirdPartyAgree,
-        hasCurrentInsurance: true,
-        currentInsuranceName: formData.companyName + ' ' + formData.productName,
-        medicalHistory: '',
-        targetPremium: '',
-        neutered: true,
-        gender: 'male',
-        ownerName: '사용자',
-      });
-    } catch {
-      setSubmitting(false);
-      alert('신청 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-      return;
+    const params = new URLSearchParams();
+    const insuranceName = `${formData.companyName} ${formData.productName}`.trim();
+    if (insuranceName) {
+      params.set('hasCurrentInsurance', 'yes');
+      params.set('currentInsuranceName', insuranceName);
+    }
+    if (formData.message) {
+      params.set('message', formData.message);
     }
 
-    router.push('/insurance/complete');
+    const query = params.toString();
+    router.push(`/insurance/apply${query ? `?${query}` : ''}`);
   };
 
   const fieldClass = 'w-full rounded-xl border border-[#D8D6CE] bg-[#FAF9F5] px-4 py-3 text-sm transition-colors focus:border-[#2F3B34] focus:outline-none focus:ring-1 focus:ring-[#2F3B34]';
@@ -194,25 +223,25 @@ export default function InsurancePage() {
       {/* 1. 히어로 영역 */}
       <section className="pt-10">
         <div className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-12">
-          <div className="relative flex flex-col overflow-hidden rounded-[22px] bg-[#1A221E] px-8 py-12 md:h-[410px] md:flex-row md:items-center md:px-12 lg:px-14">
+          <div className="bg-noise relative flex flex-col overflow-hidden rounded-[22px] border border-[#E2DACD] bg-[#F1EDE5] px-8 py-12 shadow-[0_20px_50px_-35px_rgba(23,33,29,0.18)] md:h-[410px] md:flex-row md:items-center md:px-12 lg:px-14">
             {/* 좌측 콘텐츠 (55%) */}
             <div className="relative z-10 md:w-[55%]">
-              <p className="text-sm font-semibold text-[#F4F2EC]">보험 분석 서비스</p>
-              <h1 className="mt-4 text-[34px] font-bold leading-[1.2] tracking-[-0.035em] text-[#FBFAF7] sm:text-[42px] md:text-[48px]">
+              <p className="text-sm font-semibold text-[#A8742E]">보험 분석 서비스</p>
+              <h1 className="mt-4 text-[34px] font-bold leading-[1.2] tracking-[-0.035em] text-[#17211D] sm:text-[42px] md:text-[48px]">
                 우리 아이에게<br />
                 필요한 보장,<br />
                 함께 차근차근 살펴봐요.
               </h1>
-              <p className="mt-5 text-sm leading-[1.65] text-[#FBFAF7]/80 sm:text-[15px]">
+              <p className="mt-5 text-sm leading-[1.7] text-[#5F6761] sm:text-[15px]">
                 나이와 건강, 견종, 지금 가입 보험을 함께 살펴<br className="hidden sm:block" />
                 놓치기 쉬운 조건을 이해하기 쉽게 정리해 드려요.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a href="#insurance-form" className="inline-flex h-[52px] items-center justify-center rounded-full bg-[#FBFAF7] px-8 text-[15px] font-bold text-[#1A221E] transition-colors hover:bg-white">
+                <a href="#insurance-form" className="inline-flex h-[52px] items-center justify-center rounded-full bg-[#17211D] px-8 text-[15px] font-bold text-[#FBFAF7] transition-all duration-500 ease-out hover:bg-[#202521] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A8742E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F1EDE5]">
                   보험 분석 신청하기
                   <ArrowRight className="ml-2 size-4" aria-hidden="true" />
                 </a>
-                <a href="#insurance-form" className="inline-flex h-[52px] items-center justify-center rounded-full border border-white/20 bg-transparent px-8 text-[15px] font-bold text-[#FBFAF7] transition-colors hover:bg-white/10">
+                <a href="#insurance-form" className="inline-flex h-[52px] items-center justify-center rounded-full border border-[#D8C4A3] bg-[#FFFEFB] px-8 text-[15px] font-bold text-[#17211D] transition-all duration-500 ease-out hover:bg-[#F8F4EC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A8742E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F1EDE5]">
                   분석이란 무엇인가요?
                 </a>
               </div>
@@ -220,23 +249,23 @@ export default function InsurancePage() {
 
             {/* 우측 패널 (45%) */}
             <div className="relative z-10 mt-10 md:mt-0 md:w-[45%] md:pl-8">
-              <div className="rounded-[20px] border border-white/10 bg-white/5 p-8 backdrop-blur-md">
-                <p className="text-[13px] font-semibold text-[#F4F2EC]/80">분석에서 확인하는 항목</p>
+              <div className="rounded-[20px] border border-[#E2DACD] bg-[#FFFEFB]/95 p-8 shadow-[0_18px_45px_-30px_rgba(23,33,29,0.25)] backdrop-blur-md">
+                <p className="text-[13px] font-semibold text-[#6F766F]">분석에서 확인하는 항목</p>
                 <ul className="mt-6 space-y-4">
                   {firstChecks.map((item, index) => (
-                    <li key={item} className="flex items-center border-b border-white/10 pb-4 last:border-0 last:pb-0">
-                      <span className="mr-4 flex size-8 items-center justify-center rounded-md bg-white/10 text-xs font-bold text-[#F4F2EC]">
+                    <li key={item} className="flex items-center border-b border-[#E7E0D5] pb-4 last:border-0 last:pb-0">
+                      <span className="mr-4 flex size-8 items-center justify-center rounded-md bg-[#F3EEE6] text-xs font-bold text-[#A8742E]">
                         0{index + 1}
                       </span>
-                      <span className="text-[15px] font-medium text-white">{item}</span>
+                      <span className="text-[15px] font-medium text-[#17211D]">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
             {/* Background Decoration */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-10 blur-3xl pointer-events-none">
-              <ShieldCheck className="size-96 text-white" />
+            <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-20 blur-3xl">
+              <ShieldCheck className="size-96 text-[#D8C4A3]" />
             </div>
           </div>
         </div>
@@ -245,9 +274,9 @@ export default function InsurancePage() {
       {/* 2. 보험 분석 원칙 3개 통합 패널 */}
       <section className="mt-8">
         <div className="mx-auto w-full max-w-[1280px] px-5 md:px-7 lg:px-10 xl:px-12">
-          <div className="flex flex-col overflow-hidden rounded-[22px] border border-[#EBE8E1] bg-white md:flex-row md:h-[140px]">
+          <div className="flex flex-row overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 md:gap-0 pb-4 md:pb-0 md:rounded-[22px] md:border md:border-[#EBE8E1] md:bg-white md:h-[140px] md:overflow-hidden">
             {reviewPrinciples.map(({ icon: Icon, title, text }, idx) => (
-              <article key={title} className={`flex flex-1 flex-col justify-center p-6 lg:p-8 ${idx !== 0 ? 'border-t border-[#EBE8E1] md:border-l md:border-t-0' : ''}`}>
+              <article key={title} className={`flex flex-col justify-center p-6 lg:p-8 w-[80vw] sm:w-[320px] md:w-auto shrink-0 snap-center rounded-[22px] border border-[#EBE8E1] bg-white md:rounded-none md:border-0 md:flex-1 ${idx !== 0 ? 'md:border-l md:border-[#EBE8E1]' : ''}`}>
                 <div className="flex items-start gap-4">
                   <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FAF9F5] text-[#1A221E]">
                     <Icon className="size-6" strokeWidth={1.5} />
@@ -270,7 +299,7 @@ export default function InsurancePage() {
             {/* 좌측 준비 안내 (32%) */}
             <div className="lg:w-[32%] lg:pt-2">
               <p className="text-[13px] font-bold text-[#A8742E]">증권을 준비해 주세요</p>
-              <h2 className="mt-3 text-[32px] font-bold leading-[1.2] tracking-[-0.035em] text-[#1A1D1B] lg:text-[38px]">
+              <h2 className="mt-3 text-[28px] md:text-[32px] font-bold leading-[1.2] tracking-[-0.035em] text-[#1A1D1B] lg:text-[38px] break-keep min-w-0">
                 증권을 보며<br />
                 궁금한 점부터<br />
                 정리해 보세요.
@@ -299,16 +328,16 @@ export default function InsurancePage() {
               <div className="mt-12 flex items-start gap-3 rounded-xl bg-[#F4F2EC] p-4">
                 <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#1A221E]" strokeWidth={1.5} />
                 <p className="text-[13px] leading-[1.65] text-[#5F6761]">
-                  업로드된 파일은 안전하게 보호되며<br />
-                  분석 목적 외에 사용하지 않습니다.
+                  이 화면에서 고른 파일은 미리보기용이며 저장되지 않습니다.<br />
+                  실제 첨부는 다음 단계(신청서)에서 안전하게 업로드돼요.
                 </p>
               </div>
             </div>
 
             {/* 우측 실제 신청 폼 (68%) */}
             <div className="rounded-[24px] border border-[#EBE8E1] bg-white p-8 lg:w-[68%] lg:p-10">
-              <h3 className="text-xl font-bold text-[#1A1D1B]">가지고 있는 증권을 선택해 주세요.</h3>
-              <p className="mt-2 text-[14px] text-[#5F6761]">파일을 업로드하고 기본 정보를 입력하시면 분석 준비가 완료됩니다.</p>
+              <h3 className="text-xl font-bold text-[#1A1D1B]">가지고 있는 증권을 미리 확인해 보세요.</h3>
+              <p className="mt-2 text-[14px] text-[#5F6761]">실제 증권 첨부와 접수는 다음 단계(신청서 작성)에서 진행돼요. 아래 정보를 남겨주시면 신청서에 그대로 이어드립니다.</p>
 
               {/* 업로드 영역 */}
               <div className="mt-8">
@@ -343,7 +372,7 @@ export default function InsurancePage() {
                 ) : (
                   <div className="flex h-[200px] flex-col items-center justify-center rounded-[16px] border border-[#EBE8E1] bg-[#FAF9F5] p-6">
                     <FileText className="size-10 text-[#A8742E] mb-4" strokeWidth={1.5} />
-                    <p className="text-[15px] font-bold text-[#1A1D1B] truncate max-w-xs">{file.name}</p>
+                    <p className="max-w-xs break-all text-[15px] font-bold leading-[1.5] text-[#1A1D1B]">{file.name}</p>
                     <p className="mt-1 text-[13px] text-[#5F6761]">{(file.size / (1024 * 1024)).toFixed(1)}MB</p>
                     <button type="button" onClick={clearFile} className="mt-5 flex items-center gap-1 text-[13px] font-semibold text-[#1A221E] hover:underline">
                       <X className="size-3" /> 삭제 후 다시 선택
@@ -384,31 +413,40 @@ export default function InsurancePage() {
                 </label>
 
                 <div className="space-y-3 pt-4 border-t border-[#EBE8E1]">
-                  <label className="flex items-center justify-between cursor-pointer rounded-xl border border-[#EBE8E1] bg-[#FAF9F5] p-4 transition-colors hover:border-[#D8D6CE]">
-                    <div className="flex items-center gap-3">
-                      <div className="relative flex size-[18px] shrink-0 items-center justify-center rounded border border-[#C9C8C0] transition-colors has-[:checked]:border-[#1A221E] has-[:checked]:bg-[#1A221E]">
-                        <input required type="checkbox" name="privacyAgree" checked={formData.privacyAgree} onChange={handleChange} className="peer sr-only" />
-                        <Check className="size-3 text-white opacity-0 peer-checked:opacity-100" strokeWidth={3} aria-hidden="true" />
+                  {content.consents.map((consent) => (
+                    <label key={consent.id} className="flex items-center justify-between cursor-pointer rounded-xl border border-[#EBE8E1] bg-[#FAF9F5] p-4 transition-colors hover:border-[#D8D6CE]">
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex size-[18px] shrink-0 items-center justify-center rounded border border-[#C9C8C0] transition-colors has-[:checked]:border-[#1A221E] has-[:checked]:bg-[#1A221E]">
+                          <input
+                            required={consent.required}
+                            type="checkbox"
+                            checked={!!consentChecks[consent.id]}
+                            onChange={() => setConsentChecks((prev) => ({ ...prev, [consent.id]: !prev[consent.id] }))}
+                            className="peer sr-only"
+                          />
+                          <Check className="size-3 text-white opacity-0 peer-checked:opacity-100" strokeWidth={3} aria-hidden="true" />
+                        </div>
+                        <span className="text-[14px] text-[#1A1D1B]">{consent.title}{consent.required ? ' (필수)' : ' (선택)'}</span>
                       </div>
-                      <span className="text-[14px] text-[#1A1D1B]">개인정보 수집 및 이용 동의 (필수)</span>
-                    </div>
-                    <span className="text-[13px] text-[#5F6761] underline underline-offset-2">전문 보기</span>
-                  </label>
-                  <label className="flex items-center justify-between cursor-pointer rounded-xl border border-[#EBE8E1] bg-[#FAF9F5] p-4 transition-colors hover:border-[#D8D6CE]">
-                    <div className="flex items-center gap-3">
-                      <div className="relative flex size-[18px] shrink-0 items-center justify-center rounded border border-[#C9C8C0] transition-colors has-[:checked]:border-[#1A221E] has-[:checked]:bg-[#1A221E]">
-                        <input required type="checkbox" name="thirdPartyAgree" checked={formData.thirdPartyAgree} onChange={handleChange} className="peer sr-only" />
-                        <Check className="size-3 text-white opacity-0 peer-checked:opacity-100" strokeWidth={3} aria-hidden="true" />
-                      </div>
-                      <span className="text-[14px] text-[#1A1D1B]">보험 분석 서비스 이용 동의 (필수)</span>
-                    </div>
-                    <span className="text-[13px] text-[#5F6761] underline underline-offset-2">전문 보기</span>
-                  </label>
+                      {/* label 내부라 preventDefault 필수 — 클릭이 체크박스 토글로 번지지 않게 막는다. */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setOpenConsent(consent);
+                        }}
+                        className="text-[13px] text-[#5F6761] underline underline-offset-2 hover:text-[#1A1D1B]"
+                      >
+                        전문 보기
+                      </button>
+                    </label>
+                  ))}
                 </div>
 
-                <button type="submit" disabled={!formData.privacyAgree || !formData.thirdPartyAgree || submitting} className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#1A221E] py-[18px] text-[15px] font-bold text-white transition-colors hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed">
-                  {submitting ? '신청 접수 중…' : '보험 분석 신청하기'}
-                  {!submitting && <ArrowRight className="size-4" />}
+                <button type="submit" disabled={!allRequiredChecked} className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#1A221E] py-[18px] text-[15px] font-bold text-white transition-colors hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed">
+                  다음 단계로 (신청서 작성)
+                  <ArrowRight className="size-4" />
                 </button>
               </form>
             </div>
@@ -424,7 +462,7 @@ export default function InsurancePage() {
                 <ShieldCheck className="size-8 text-[#1A221E]" strokeWidth={1.5} />
                 <div>
                   <p className="text-[15px] font-bold text-[#1A1D1B]">백조오브제는 소중한 정보를 안전하게 보호합니다.</p>
-                  <p className="mt-1 text-[13px] text-[#5F6761]">업로드된 증권과 개인정보는 암호화되어 저장되며, 분석 목적 외에는 절대 사용되지 않습니다.</p>
+                  <p className="mt-1 text-[13px] text-[#5F6761]">증권과 개인정보는 다음 단계(신청서 제출) 시 안전하게 처리되며, 분석 목적 외에는 사용되지 않습니다.</p>
                 </div>
               </div>
               <a href="#" className="mt-4 md:mt-0 text-[13px] font-bold text-[#1A1D1B] flex items-center gap-1">
@@ -442,9 +480,9 @@ export default function InsurancePage() {
             <p className="mt-2 text-[15px] text-[#5F6761]">신청부터 결과 확인까지, 차근차근 안내해 드립니다.</p>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-row overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-4">
             {reviewSteps.map((step, index) => (
-              <div key={step.title} className="flex-1 rounded-[20px] bg-white p-8 border border-[#EBE8E1] flex flex-col items-center text-center relative group">
+              <div key={step.title} className="flex-1 w-[70vw] sm:w-[280px] md:w-auto shrink-0 snap-center rounded-[20px] bg-white p-8 border border-[#EBE8E1] flex flex-col items-center text-center relative group">
                 <span className="flex size-14 items-center justify-center rounded-full bg-[#FAF9F5] text-[#1A221E] font-editorial text-xl italic mb-6">
                   0{index + 1}
                 </span>
@@ -489,15 +527,36 @@ export default function InsurancePage() {
           {/* FAQ (70%) */}
           <div className="lg:w-[70%] rounded-[24px] bg-white border border-[#EBE8E1] p-8 md:p-10">
             <h2 className="text-[20px] font-bold text-[#1A1D1B] mb-8">자주 묻는 질문</h2>
-            <div className="grid md:grid-cols-3 gap-4">
-              {faqs.map((faq, idx) => (
-                <div key={idx} className="rounded-xl bg-[#FAF9F5] p-5 cursor-pointer hover:bg-[#F4F2EC] transition-colors border border-transparent hover:border-[#EBE8E1]">
-                   <div className="flex items-center justify-between">
-                     <p className="text-[14px] font-bold text-[#1A1D1B]">{faq.q}</p>
-                     <ChevronDown className="size-4 text-[#5F6761] shrink-0" />
-                   </div>
-                </div>
-              ))}
+            <div className="flex flex-col gap-4">
+              {content.faqs.map((faq) => {
+                const isOpen = openFaqId === faq.id;
+                return (
+                  <div
+                    key={faq.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isOpen}
+                    onClick={() => setOpenFaqId((current) => (current === faq.id ? null : faq.id))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setOpenFaqId((current) => (current === faq.id ? null : faq.id));
+                      }
+                    }}
+                    className="rounded-xl bg-[#FAF9F5] cursor-pointer hover:bg-[#F4F2EC] transition-colors border border-transparent hover:border-[#EBE8E1] overflow-hidden"
+                  >
+                     <div className="flex items-center justify-between p-5">
+                       <p className="text-[14px] font-bold text-[#1A1D1B]">{faq.q}</p>
+                       <ChevronDown className={`size-4 text-[#5F6761] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                     </div>
+                     {isOpen && (
+                       <div className="px-5 pb-5 pt-0">
+                         <p className="text-[14px] text-[#5F6761] leading-[1.65]">{faq.a}</p>
+                       </div>
+                     )}
+                  </div>
+                );
+              })}
             </div>
           </div>
           
@@ -511,6 +570,23 @@ export default function InsurancePage() {
           </div>
         </div>
       </section>
+
+      {/* 동의 문서 전문 모달 — '전문 보기' 클릭 시 관리자가 저장한 약관 전문을 그대로 보여준다. */}
+      {openConsent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setOpenConsent(null)}>
+          <div ref={consentDialogRef} role="dialog" aria-modal="true" aria-label={openConsent.title} className="flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-[20px] bg-[#FAF9F5]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex shrink-0 items-center justify-between border-b border-[#EBE8E1] px-6 py-5">
+              <h2 className="text-[16px] font-bold text-[#1A1D1B]">{openConsent.title}</h2>
+              <button ref={consentCloseButtonRef} type="button" aria-label="닫기" onClick={() => setOpenConsent(null)} className="rounded p-1 text-[#5F6761] transition-colors hover:bg-[#F4F2EC]">
+                <X className="size-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto px-6 py-5">
+              <p className="whitespace-pre-line text-[14px] leading-[1.7] text-[#4F5751]">{openConsent.body}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
